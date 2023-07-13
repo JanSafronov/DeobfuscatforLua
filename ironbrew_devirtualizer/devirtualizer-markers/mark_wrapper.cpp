@@ -118,4 +118,27 @@ namespace deobf::ironbrew_devirtualizer::devirtualizer_ast_markers {
 			return false;
 		}
 	};
+
+	void mark_wrapper::optimize()
+	{
+		const auto block = static_cast<const ir::statement::block*>(root);
+		std::cout << "optimizer(mark_wrapper)\n";
+		mark_wrapper_visitor optimizer{ "wrap", "pack_return", "environment", "upvalues", "current_instruction", "stack", "varargs", "instructions", "constants", "protos", "parameters", "instruction_pointer", "stack_top", "vararg_size", "virtual_opcode", "deserialize_result" };
+		if (block->ret.has_value()) {
+			const auto ret = block->ret.value()->body.at(0)->as<ir::expression::function_call>();
+			if (const auto symbol = block->find_symbol(ret->name.value()->to_string())) {
+				const auto functional_value = symbol->symbol_value->as<ir::expression::function>();
+
+
+				functional_value->body->find_symbol(functional_value->function_name.value())->resolve_identifier = "wrap";
+
+				// parameter 3 is always environment
+				functional_value->body->find_symbol(functional_value->parameters.at(2)->to_string())->resolve_identifier = "environment";
+				functional_value->body->find_symbol(functional_value->parameters.at(1)->to_string())->resolve_identifier = "upvalues";
+				functional_value->body->find_symbol(functional_value->parameters.at(0)->to_string())->resolve_identifier = "deserialize_result";
+
+				functional_value->body->accept(&optimizer);
+			}
+		}
+	}
 }
