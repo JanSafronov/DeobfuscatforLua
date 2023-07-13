@@ -88,4 +88,38 @@ namespace deobf::vanilla_serializer {
 		bytecode->write<std::uint32_t>(0);
 	}
 
+	void vanilla_serializer::serialize_header() {
+		// write precompiled chunk signature
+		bytecode->write<std::uint32_t>(magic_signature);
+		
+		// lua version (5.1.4)
+		bytecode->write<std::uint8_t>(0x51);
+
+		// is format version ?
+		bytecode->write<std::uint8_t>(0);
+
+		// big endian
+		bytecode->write<std::uint8_t>(1);
+
+		// machine int size
+		bytecode->write<std::uint8_t>(4);
+		
+		// machine size_t size
+		bytecode->write<std::uint8_t>(4);
+		
+		// instruction size
+		bytecode->write<std::uint8_t>(4);
+		
+		// lua_Number Size
+		bytecode->write<std::uint8_t>(8);
+
+		// integral flag
+		bytecode->write<std::uint8_t>(0);
+	}
+
+	void vanilla_serializer::serialize() {
+		serialize_header();
+
+		serialize_proto(proto, true);
+	}
 }
