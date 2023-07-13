@@ -54,4 +54,38 @@ namespace deobf::vanilla_serializer {
 			}, constant->value);
 		}
 
+		// serialize protos
+		std::cout << "NUM:" << proto.protos.size() << std::endl;
+		bytecode->write<std::uint32_t>(proto.protos.size());
+		for (auto& proto : proto.protos) {
+			serialize_proto(*proto, false);
+		}
+
+		// - debug information -
+
+		// serialize lineinfo (stripped unless lineinfo is preserved)
+		/*bytecode->write<std::uint32_t>(proto.line_info.size());
+		for (auto& line : proto.line_info) {
+			bytecode->write<std::uint32_t>(line);
+		}*/
+		/*if (proto.line_info.size() != 0) { // has lineinfo?
+			bytecode->write<std::uint32_t>(proto.code.size());
+			for (auto& code : proto.code) {
+				bytecode->write<std::uint32_t>(code->line_defined);
+			}
+		}*/
+
+		bytecode->write<std::uint32_t>(0);
+
+		// TODO FIX LINEINFO
+
+		bytecode->write<std::uint32_t>(0);
+
+		// serialize locvars (stripped)
+		bytecode->write<std::uint32_t>(0);
+
+		// seriaize upvals (stripped)
+		bytecode->write<std::uint32_t>(0);
+	}
+
 }
