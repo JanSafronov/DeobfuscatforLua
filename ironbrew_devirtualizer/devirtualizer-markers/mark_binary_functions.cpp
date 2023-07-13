@@ -46,9 +46,20 @@ namespace deobf::ironbrew_devirtualizer::devirtualizer_ast_markers {
 			if (statement->body.size() == 1) {
 				auto& result = statement->body.at(0)->find_first_of<ir::expression::numeral_literal>();
 				if (result.has_value()) {
+					const auto value = result.value().get().to_string();
+					if (value == "256") {
+						current_block->find_symbol(current_function->function_name.value())->resolve_identifier = "get_16_bits";
+					}
+					else if (value == "1.67772e+07") {
+						current_block->find_symbol(current_function->function_name.value())->resolve_identifier = "get_32_bits";
+					}
+					return true;
 				}
 				else if (auto result = statement->body.at(0)->as<ir::expression::string_literal>()) {
 					const auto value = result->to_string();
+					if (value.empty()) {
+						current_block->find_symbol(current_function->function_name.value())->resolve_identifier = "get_string";
+					}
 				}
 			}
 			else if (statement->body.size() == 2) {
@@ -71,4 +82,9 @@ namespace deobf::ironbrew_devirtualizer::devirtualizer_ast_markers {
 		ir::expression::function* current_function;
 		using operation_t = typename ir::expression::binary_expression::operation_t;
 	};
+
+	void mark_binary_functions::optimize() {
+		binary_marker_visitor optimizer{ "get_bits", "get_8_bits", "get_16_bits", "get_32_bits", "get_float", "get_string", "pack_return" };
+		root->accept(&optimizer);
+	}
 }
