@@ -40,4 +40,33 @@ namespace deobf::ironbrew_devirtualizer::devirtualizer_ast_markers {
 			return true;
 		}
 	};
+
+	void mark_deserializer::optimize() {
+		deserializer_marker_visitor optimizer{ "bytecode_deserializer", "deserialize_return" };
+
+		// ironbrew
+		if (auto block = root->as<ir::statement::block>(); block->ret.has_value()) {
+			std::cout << block->ret.value()->to_string() << std::endl;
+			const auto function_call = block->ret.value()->body.at(0)->as<ir::expression::function_call>();
+			const auto call_first_variable = function_call->arguments.at(0)->body.at(0)->find_first_of<ir::expression::variable>();
+			if (call_first_variable.has_value()) {
+				const auto deserialize_symbol = call_first_variable.value().get().to_string();
+				if (const auto result = block->find_symbol(deserialize_symbol)) {
+					const auto& deseriaize_function = result->symbol_value->as<ir::expression::function>();
+					result->resolve_identifier = "bytecode_deserializer";
+					block->insert_symbol<true>("bytecode_deserializer", result->symbol_value->as<ir::expression::function>()->body);
+					
+					if (deseriaize_function->body->ret.has_value() && deseriaize_function->body->ret.value()->body.size() == 1) {
+						const auto return_symbol = deseriaize_function->body->ret.value()->body.at(0)->to_string();
+						if (auto symbol_result = deseriaize_function->body->find_symbol(return_symbol)) {
+							symbol_result->resolve_identifier = "deserialize_return";
+						}
+					}
+
+				}
+			}
+		}
+
+		root->accept(&optimizer);
+	}
 }
