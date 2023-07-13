@@ -1,0 +1,57 @@
+#include "vanilla_serializer.hpp"
+#include <variant>
+
+namespace deobf::vanilla_serializer {
+	
+	template<typename ... Ts>
+	struct overloaded : Ts ... {
+		using Ts::operator() ...;
+	};
+	template<class... Ts> overloaded(Ts...)->overloaded<Ts...>;
+
+	void vanilla_serializer::serialize_proto(vm_arch::vanilla_proto& proto, bool is_top) {
+		bytecode->write_string(is_top ? proto.chunk_name : "");
+
+		//(is_top ? bytecode->write_string(proto.chunk_name) : bytecode->write<std::uint32_t>(0));
+
+		// serialize proto header
+		bytecode->write<std::uint32_t>(proto.line_defined);
+		bytecode->write<std::uint32_t>(proto.last_line_defined);
+		bytecode->write<std::uint8_t>(proto.num_upvalues);
+		bytecode->write<std::uint8_t>(proto.num_parameters);
+		bytecode->write<std::uint8_t>(proto.is_vararg);
+		bytecode->write<std::uint8_t>(proto.max_stack_size);
+
+		// encode and serialize instructions
+		bytecode->write<std::uint32_t>(proto.code.size());
+
+		for (auto& instruction : proto.code) {
+			bytecode->write<std::uint32_t>(instruction->get_value());
+		}
+
+		// serialize constants
+		bytecode->write<std::uint32_t>(proto.constants.size());
+		for (auto& constant : proto.constants) {
+			std::visit(overloaded {
+				[this](std::nullptr_t) {
+					bytecode->write<std::uint8_t>(0); // LUA_TNIL
+				},
+				[this](double value) {
+					bytecode->write<std::uint8_t>(3); // LUA_TNUMBER
+
+					bytecode->write<double>(value);
+				},
+				[this](const std::string& value) {
+					bytecode->write<std::uint8_t>(4); // LUA_TSTRING
+					
+					bytecode->write_string(value);
+				},
+				[this](bool value) {
+					bytecode->write<std::uint8_t>(1); // LUA_TBOOLEAN
+
+					bytecode->write<std::uint8_t>(value ? 1 : 0);
+				}
+			}, constant->value);
+		}
+
+}
