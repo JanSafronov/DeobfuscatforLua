@@ -2,17 +2,6 @@
 
 #include "../identifier_handler.hpp"
 
-/*
-artimethic OP forms in ironbrew:
-	stack[instruction_opcode_a] = ( instruction_opcode_b OP instruction_opcode_c )
-
-	stack[instruction_opcode_a] = ( stack[instruction_opcode_b] OP instruction_opcode_c )
-
-	stack[instruction_opcode_a] = ( instruction_opcode_b OP stack[instruction_opcode_c] )
-
-	stack[instruction_opcode_a] = ( stack[instruction_opcode_b] OP stack[instruction_opcode_c] )
-*/
-
 namespace deobf::ironbrew_devirtualizer::vm_handler_identifiers {
 	using namespace ast;
 
