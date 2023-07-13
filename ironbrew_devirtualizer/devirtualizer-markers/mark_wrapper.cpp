@@ -57,5 +57,65 @@ namespace deobf::ironbrew_devirtualizer::devirtualizer_ast_markers {
 
 			return true;
 		}
+
+		bool accept(ir::statement::for_step* statement) override {
+			if (statement->init->to_string() == "0") {
+				if (auto symbol = current_block->find_symbol(statement->end->to_string())) {
+					if (symbol->symbol_value->to_string().find("select") != -1) {
+						// proccess if statement
+						std::call_once(has_visited_for, [&]() { // some stuff produce same for loop
+							auto if_statement = statement->body->find_first_of<ir::statement::if_statement>();
+							if (if_statement.has_value()) {
+								auto& body = if_statement.value().get().body;
+								auto& else_body = if_statement.value().get().else_body.value();
+								const auto vararg_identifier = body->find_first_of<ir::expression::variable>().value().get().name->to_string();
+								const auto stack_identifier = else_body->find_first_of<ir::expression::variable>().value().get().name->to_string();
+
+								current_block->find_symbol(vararg_identifier)->resolve_identifier = "varargs";
+								current_block->find_symbol(stack_identifier)->resolve_identifier = "stack";
+							}
+						});
+					}
+				}
+			}
+
+			return true;
+		}
+
+		bool accept(ir::statement::while_statement* statement) override {
+			// todo
+			{
+				auto result = statement->body->find_first_of<ir::statement::variable_assign>();
+				if (result.has_value()) {
+					auto& result_pointer = result.value().get();
+
+					auto& assign_variable = result_pointer.variables.at(0);
+					current_block->find_symbol(assign_variable->to_string())->resolve_identifier = "current_instruction";
+
+					const auto instruction_pointer = result_pointer.find_first_of<ir::expression::variable_suffix>().value().get().name;
+					current_block->find_symbol(instruction_pointer->to_string())->resolve_identifier = "instruction_pointer";
+				}
+			}
+
+			{
+				auto result = statement->find_first_of<ir::statement::if_statement>();
+				if (result.has_value()) {
+					auto& result_reference = result->get();
+		
+					current_block->insert_symbol<true>("__vm_entry__", result_reference.as<ir::statement::if_statement>());
+
+					auto value = result_reference.condition;
+					if (auto condition = value->as<ir::expression::binary_expression>()) {
+						if (condition->right->is<ir::expression::numeral_literal>()) {
+							current_block->find_symbol(condition->left->to_string())->resolve_identifier = "virtual_opcode";
+							result_reference.accept(this);
+							//const_cast<ir::statement::if_statement*>(&result_reference)->accept(this); // for renaming purposes
+						}
+					}
+				}
+			}
+
+			return false;
+		}
 	};
 }
