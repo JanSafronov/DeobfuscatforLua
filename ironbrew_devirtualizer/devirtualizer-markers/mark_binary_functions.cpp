@@ -41,5 +41,34 @@ namespace deobf::ironbrew_devirtualizer::devirtualizer_ast_markers {
 			}
 			return true;
 		}
+
+		bool accept(ir::statement::return_statement* statement) override {
+			if (statement->body.size() == 1) {
+				auto& result = statement->body.at(0)->find_first_of<ir::expression::numeral_literal>();
+				if (result.has_value()) {
+				}
+				else if (auto result = statement->body.at(0)->as<ir::expression::string_literal>()) {
+					const auto value = result->to_string();
+				}
+			}
+			else if (statement->body.size() == 2) {
+				auto& result = statement->find_first_of<ir::expression::function_call>();
+				if (result.has_value() && result.value().get().name.value()->to_string() == "select" && statement->body.at(0)->is<ir::expression::table>()) {
+					current_block->find_symbol(current_function->function_name.value())->resolve_identifier = "pack_return";
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		bool accept(ir::expression::function* expression) override {
+			current_function = expression;
+			return true;
+		}
+
+	private:
+		ir::expression::function* current_function;
+		using operation_t = typename ir::expression::binary_expression::operation_t;
 	};
 }
