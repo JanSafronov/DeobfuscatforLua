@@ -275,4 +275,44 @@ namespace deobf::ast::ir::expression {
 
         void accept(abstract_visitor_pattern* visitor) override;
     };
+
+    struct table final : public expression { // called table constructor by lua's PIL
+        std::vector<std::pair<std::shared_ptr<expression>, std::shared_ptr<expression>>> entries{ }; // key also can't be a nil_literal, todo safety?
+        std::size_t array_size;
+
+        std::string to_string() const override;
+
+        [[nodiscard]] bool equals(const node* other_node) const override;
+
+        std::vector<std::shared_ptr<node>> get_children() const override;
+
+        explicit table(std::vector<std::pair<std::shared_ptr<expression>, std::shared_ptr<expression>>> entries, std::size_t array_size) :
+            entries(std::move(entries)),
+            array_size(array_size)
+        { };
+
+        void accept(abstract_visitor_pattern* visitor) override;
+    };
+
+    struct function_call final : public expression {
+        std::optional<std::shared_ptr<expression>> name; // or expression
+        name_and_args_t arguments{ };
+
+        std::string to_string() const override;
+
+        [[nodiscard]] bool equals(const node* other_node) const override;
+
+        std::vector<std::shared_ptr<node>> get_children() const override;
+
+        explicit function_call(name_and_args_t arguments) :
+            arguments(std::move(arguments))
+        { };
+
+        explicit function_call(std::shared_ptr<expression> name, name_and_args_t arguments) :
+            name(std::move(name)),
+            arguments(std::move(arguments))
+        { };
+
+        void accept(abstract_visitor_pattern* visitor) override;
+    };
 }
