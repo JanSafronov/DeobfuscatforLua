@@ -167,5 +167,35 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis {
 
 		cfg_result->instructions.erase(cfg_result->instructions.begin()); // erase NEWSTACK
 
+		// no STL because sucks
+		std::weak_ptr<vm_arch::basic_block> current_block{ cfg_result };
+		while (!current_block.expired()) {
+			auto result_block = current_block.lock();
+			for (auto it = result_block->instructions.begin(); it != result_block->instructions.end(); ) {
+				auto& current_instruction = it->get();
+				/*if (current_instruction.op == vm_arch::opcode::op_move && current_instruction.type == vm_arch::instruction_type::abc) {
+					if (current_instruction.a == 0 && current_instruction.b == 0 && current_instruction.c == 1) {
+						current_instruction.print();
+						// remove previous MOVE
+						//std::cout << std::distance(it, result_block->instructions.begin()) << std::endl;
+						//result_block->next_block->instructions.at(0).get().print();
+						
+						it = result_block->instructions.erase(it);
+						continue;
+					}
+					
+				}*/
+				if (current_instruction.op == vm_arch::opcode::op_move && current_instruction.a == 0 && current_instruction.b == 0) {
+					it = result_block->instructions.erase(it);
+					continue;
+				}
+
+				++it;
+			}
+
+			current_block = result_block->next_block;
+		}
 	}
+
+
 }
