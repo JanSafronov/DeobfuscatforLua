@@ -143,4 +143,77 @@ namespace deobf::ast {
 
 		return std::static_pointer_cast<statement::statement>(variable_node);
 	}
+	
+	antlrcpp::Any cst_visitor::visitNamelist(LuaParser::NamelistContext* ctx) {
+		expression::name_list_t name_list;
+
+		for (auto name : ctx->NAME()) {
+			auto name_node = std::make_shared<expression::string_literal>(name->getText());
+			name_list.push_back(std::move(name_node));
+		}
+
+		return name_list;
+	}
+
+	antlrcpp::Any cst_visitor::visitFuncbody(LuaParser::FuncbodyContext* ctx) {
+
+		ir::expression::name_list_t parameter_list;
+		
+		auto function_body = enter_scope(ctx->block());
+
+		if (auto ctx_parameters = ctx->parlist()) {
+			if (auto names = ctx_parameters->namelist()) {
+				for (const auto name : names->NAME()) {
+					//auto parameter = std::make_shared<expression::string_literal>(name->getText());
+					
+					std::string parameter_name = "p" + std::to_string(++parameter_counter);
+					auto parameter_value = std::make_shared<ir::expression::string_literal>(parameter_name);
+
+
+					auto symbol = function_body->insert_symbol<false>(parameter_name, parameter_value);
+
+					auto new_weak_symbol = function_body->insert_symbol(name->getText());
+					new_weak_symbol.first->second->resolve_identifier = parameter_name;
+					
+					parameter_list.push_back(parameter_value);
+				}
+			}
+			else { // varargs might be handled after parameters aswell?
+				auto variable_arguments = std::make_shared<expression::string_literal>("...");
+				parameter_list.push_back(std::move(variable_arguments));
+			}
+		}
+
+		//auto function_body = visitBlock(ctx->block()).as<std::shared_ptr<statement::block>>(); (removed because we need to insert symbols before visiting)
+
+		const auto block = ctx->block();
+
+
+		exit_scope(block);
+		/*{
+			const auto temp_old_block = current_parse_block;
+			current_parse_block = function_body.get();
+
+			ir::statement::managed_statement_list statements_body;
+			for (const auto statement : block->stat()) {
+				auto statement_node = visitStat(statement).as<std::shared_ptr<ir::statement::statement>>();
+				statements_body.push_back(std::move(statement_node));
+			}
+
+			function_body->body = std::move(statements_body);
+
+			if (auto return_statement = block->retstat()) {
+				auto return_node = visitRetstat(return_statement).as<std::shared_ptr<ir::statement::return_statement>>();
+				function_body->ret = std::move(return_node);
+			}
+
+			current_parse_block = temp_old_block;
+		}*/
+		
+		auto function_node = std::make_shared<expression::function>(expression::function::function_type::anonymous_t,
+			std::move(parameter_list),
+			std::move(function_body)); // derives from expression, in statements for a reason.
+		
+		return function_node;
+	}
 }
