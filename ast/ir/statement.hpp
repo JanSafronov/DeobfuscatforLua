@@ -129,5 +129,73 @@ namespace deobf::ast::ir {
 
             [[nodiscard]] bool is_known_symbol() const noexcept;
         };
+
+        //struct vm_handler_block final : public block
+
+        struct block final : public statement {
+            managed_statement_list body;
+            std::optional<std::shared_ptr<return_statement>> ret; // return stat
+
+            block* parent = nullptr;
+
+            template <const bool is_global, typename symbol_type, typename = std::enable_if_t<std::is_base_of<statement, symbol_type>::value>>
+            auto insert_symbol(const std::string& symbol_name, std::shared_ptr<symbol_type> symbol_value) {
+                auto head_scope = this;
+                if constexpr (is_global) // not being optimized?
+                    for (; head_scope->parent != nullptr; head_scope = head_scope->parent);
+
+                return head_scope->symbol_table.insert_or_assign(symbol_name, std::make_unique<symbol_info>(symbol_name, symbol_value)); // handles redeclarations
+            }
+
+            auto insert_symbol(const std::string& symbol_name) {
+                return symbol_table.insert_or_assign(symbol_name, std::make_unique<symbol_info>(symbol_name));
+            }
+
+            symbol_info* find_symbol(const std::string& symbol_name) const {
+                for (auto current_scope = this; current_scope != nullptr; current_scope = current_scope->parent)
+                    if (const auto result = current_scope->symbol_table.find(symbol_name); result != current_scope->symbol_table.cend())
+                        return result->second.get();
+
+                return nullptr;
+            }
+
+            std::string to_string() const override {
+                return "(to_string on block)";
+            }
+
+            [[nodiscard]] bool equals(const node* other_node) const override;
+
+            std::vector<std::shared_ptr<node>> get_children() const override;
+
+
+            // extra performance boost :
+            // iterator invalidation, forces 200 rehashings before adding any element to the symbol table (max per scope in lua 200 so is the symbol table limit)
+            // bucket_count must be 200 each symbol table no matter what
+
+            explicit block()
+            {
+                symbol_table.reserve(200);
+            };
+
+            explicit block(block* parent) :
+                parent(parent)
+            {
+                symbol_table.reserve(200);
+            }
+
+            explicit block(block* parent, managed_statement_list body, std::optional<std::shared_ptr<return_statement>> ret) :
+                parent(parent),
+                body(std::move(body)),
+                ret(std::move(ret))
+            {
+                symbol_table.reserve(200);
+            }
+
+            void accept(abstract_visitor_pattern* visitor) override;
+
+        private:
+            std::unordered_map<std::string, std::unique_ptr<symbol_info>> symbol_table;
+        };
+
     }
 }
