@@ -196,4 +196,40 @@ namespace deobf::ast::ir::expression {
 	std::vector<std::shared_ptr<node>> name_and_args::get_children() const {
 		return { };
 	}
+
+	// variable suffix expression
+
+	std::string variable_suffix::to_string() const {
+		std::ostringstream stream;
+
+		/*for (auto& name_and_arg : name_and_args)
+			stream << name_and_arg->to_string();
+			*/
+		if (name->is<ir::expression::string_literal>())
+			stream << '.' << name->to_string();
+		else
+			stream << '[' << name->to_string() << ']';
+
+		return stream.str();
+	}
+
+	bool variable_suffix::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::vector<std::shared_ptr<node>> variable_suffix::get_children() const {
+		auto children_vector = std::vector<std::shared_ptr<node>>(name_and_args.begin(), name_and_args.end());
+
+		children_vector.push_back(name);
+
+		return children_vector;
+	}
+
+	void variable_suffix::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			name->accept(visitor); // yes its either an expression
+			for (const auto& argument : name_and_args)
+				argument->accept(visitor);
+		}
+	}
 }
