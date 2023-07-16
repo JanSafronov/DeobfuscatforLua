@@ -123,6 +123,46 @@ namespace deobf::ast::optimization_passes {
 
 			return std::nullopt;
 		}
+
+		bool accept(ir::expression::table* expression) override { // optimize a table with unary expressions as indices
+			for (auto& [expression, _] : expression->entries) { // todo a std::views::keys alternative? lazy to use cpp20
+				if (auto unary = dynamic_cast<ir::expression::unary_expression*>(expression.get())) {
+					unary->body->accept(this);
+
+					if (auto optimization_result = optimize(unary); optimization_result.has_value()) {
+						expression = std::move(optimization_result.value());
+					}
+				}
+			}
+
+			return true;
+		}
+
+		bool accept(ir::expression::unary_expression* expression) override {
+			if (auto unary = dynamic_cast<ir::expression::unary_expression*>(expression->body.get())) {
+				if (auto optimization_result = optimize(unary); optimization_result.has_value()) {
+					expression->body = std::move(optimization_result.value());
+				}
+			}
+
+			return true;
+		}
+
+
+		bool accept(ir::statement::local_declaration* declare) override {
+			for (auto& statement : declare->body) {
+				if (auto binary = dynamic_cast<ir::expression::binary_expression*>(statement.get())) {
+					binary->accept(this);
+					
+					// optimiez final expression, attach into statement (todo a better approach?)
+					if (auto optimized_result = optimize(binary); optimized_result.has_value())
+						statement = std::move(optimized_result.value());
+					std::cout << declare->to_string() << std::endl;
+				}
+			}
+
+			return true;
+		}
 	};
 
 	void constant_folding::optimize() {
