@@ -300,5 +300,67 @@ namespace deobf::ast::ir {
 
             void accept(abstract_visitor_pattern* visitor) override;
         };
+
+        struct for_step final : public statement {
+            std::shared_ptr<ir::expression::string_literal> name;
+            std::shared_ptr<expression_t> init, end; // i.e. for name = 1, 3, 1 (init, end, step) do BLOCk end
+            std::optional<std::shared_ptr<expression_t>> step;
+            std::shared_ptr<block> body;
+
+            std::string to_string() const override;
+
+            [[nodiscard]] bool equals(const node* other_node) const override;
+
+            std::vector<std::shared_ptr<node>> get_children() const override;
+
+            explicit for_step(std::shared_ptr<ir::expression::string_literal> name,
+                std::shared_ptr<expression_t> init,
+                std::shared_ptr<expression_t> end,
+                std::shared_ptr<block> body) :
+                name(std::move(name)),
+                init(std::move(init)),
+                end(std::move(end)),
+                body(std::move(body))
+            { };
+
+            explicit for_step(std::shared_ptr<ir::expression::string_literal> name,
+                std::shared_ptr<expression_t> init,
+                std::shared_ptr<expression_t> end,
+                std::shared_ptr<expression_t> step,
+                std::shared_ptr<block> body) :
+                name(std::move(name)),
+                init(std::move(init)),
+                end(std::move(end)),
+                step(std::move(step)),
+                body(std::move(body))
+            { };
+
+            void accept(abstract_visitor_pattern* visitor) override;
+        };
+
+        struct for_in final : public statement {
+            enum class iterator_type {
+                stateless,
+                stateful
+            };
+
+            ir::expression::name_list_t names{ }; // for (...) in
+            ir::expression::expression_list_t expressions{ }; // in a,b,c,d (everything)
+            std::shared_ptr<block> body;
+
+            [[nodiscard]] bool equals(const node* other_node) const override;
+
+            std::string to_string() const override;
+
+            std::vector<std::shared_ptr<node>> get_children() const override;
+
+            explicit for_in(ir::expression::name_list_t names, ir::expression::expression_list_t expressions, std::shared_ptr<block> body) :
+                names(std::move(names)),
+                expressions(std::move(expressions)),
+                body(std::move(body))
+            { };
+
+            void accept(abstract_visitor_pattern* visitor) override;
+        };
     }
 }
