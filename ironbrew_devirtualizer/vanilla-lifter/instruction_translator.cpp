@@ -52,6 +52,44 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 				new_instruction->b -= original_instruction->a;
 				break;
 			}
+			case vm_arch::opcode::op_setlist2: {
+				// todo (rare case altho we might hit block 512 on big tables)
+				new_instruction->c = 0;
+				break;
+			}
+			case vm_arch::opcode::op_closure: { // upvalues are resolved by operand C at runtime in ironbrew, lua Vm already resolves it, null out C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abx;
+
+				new_instruction->sbx = 0;
+				new_instruction->c = 0;
+				new_instruction->bx = original_instruction->bx;
+
+				break;
+			}
+			case vm_arch::opcode::op_tforloop: {
+				new_instruction->type = vm_arch::vanilla_instruction_type::ac;
+
+				new_instruction->b = 0;
+				break;
+			}
+			case vm_arch::opcode::op_settable1: {
+				new_instruction->b += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_settable2: {
+				new_instruction->c += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_settable3: {
+				new_instruction->b += 0xff;
+				new_instruction->c += 0xff;
+				break;
+			}
+			// arthimethic
+			case vm_arch::opcode::op_add1: {
+				new_instruction->b += 0xff;
+				break;
+			}
 		}
 
 		return std::move(new_instruction);
