@@ -140,4 +140,53 @@ namespace deobf::ast {
 
 		return std::static_pointer_cast<ir::statement::statement>(while_statement);
 	}
+
+	antlrcpp::Any cst_visitor::visitForInStat(LuaParser::ForInStatContext* ctx) {
+		auto names = visitNamelist(ctx->namelist()).as<ir::expression::name_list_t>();
+		auto expressions = visitExplist(ctx->explist()).as<ir::expression::expression_list_t>(); // minimum 2/3
+		auto body = visitBlock(ctx->block()).as<std::shared_ptr<ir::statement::block>>();
+
+		auto for_statement = std::make_shared<ir::statement::for_in>(std::move(names),
+			std::move(expressions),
+			std::move(body));
+
+		for (auto i = 0ul; i < for_statement->names.size(); ++i) { // prob could use std::transform or something liek that idk
+			const auto name_value = for_statement->names.at(i)->value;
+			for_statement->names.at(i)->value = "v" + std::to_string(++variable_counter);
+		}
+
+		return std::static_pointer_cast<ir::statement::statement>(for_statement);
+	}
+
+	antlrcpp::Any cst_visitor::visitForStat(LuaParser::ForStatContext* ctx) {
+		// todo rename iterator name?
+		//auto iterator_name = std::make_shared<expression::string_literal>(ctx->NAME()->getText());
+		auto iterator_name = std::make_shared<expression::string_literal>("v" + std::to_string(++variable_counter));
+
+		auto iterator_init = visitExp(ctx->exp()[0]).as<std::shared_ptr<ir::expression::expression>>();
+		auto iterator_end = visitExp(ctx->exp()[1]).as<std::shared_ptr<ir::expression::expression>>();
+
+		std::shared_ptr<ir::statement::for_step> for_step_statement = nullptr;
+
+		// todo insert name symbol before body?
+
+		auto iterator_body = visitBlock(ctx->block()).as<std::shared_ptr<ir::statement::block>>();
+
+		if (ctx->COMMA().size() > 1) { // because exp size is unreliable
+			auto iterator_step = visitExp(ctx->exp()[2]).as<std::shared_ptr<ir::expression_t>>();
+			for_step_statement = std::make_shared<ir::statement::for_step>(std::move(iterator_name),
+				std::move(iterator_init),
+				std::move(iterator_end),
+				std::move(iterator_step),
+				std::move(iterator_body));
+		}
+		else {
+			for_step_statement = std::make_shared<ir::statement::for_step>(std::move(iterator_name),
+				std::move(iterator_init),
+				std::move(iterator_end),
+				std::move(iterator_body));
+		}
+
+		return std::static_pointer_cast<ir::statement::statement>(for_step_statement);
+	}
 }
