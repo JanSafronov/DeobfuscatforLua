@@ -244,4 +244,67 @@ namespace deobf::ast {
 			auto string_literal = std::make_shared<expression::string_literal>(ctx->NAME()->getText());
 			expression_name = std::static_pointer_cast<expression_t>(string_literal);
 		}
+
+		expression::name_and_args_t arguments;
+		for (auto argument : ctx->nameAndArgs()) {
+			auto result = visitNameAndArgs(argument).as<std::shared_ptr<expression::name_and_args>>();
+			arguments.push_back(std::move(result));
+		}
+
+		auto variable_suffix = std::make_shared<expression::variable_suffix>(std::move(expression_name), std::move(arguments));
+
+		return variable_suffix;
+	}
+
+	antlrcpp::Any cst_visitor::visitVar(LuaParser::VarContext* ctx) {
+		std::shared_ptr<expression::expression> variable_name = nullptr;
+		if (auto name = ctx->NAME()) {
+			variable_name = std::make_shared<expression::string_literal>(name->getText());
+		}
+		else { // expression
+			variable_name = visitExp(ctx->exp()).as<std::shared_ptr<expression_t>>();
+		}
+
+		if (auto symbol = current_parse_block->find_symbol(variable_name->to_string())) { // best way to do that instead of making a rename visitor? ( O(n * k) time complexity btw )
+		
+			variable_name = std::make_shared<expression::string_literal>(symbol->resolve_identifier);
+		}
+
+
+		std::vector<std::shared_ptr<expression::variable_suffix>> suffix_list;
+		for (auto suffix : ctx->varSuffix()) {
+			auto suffix_expresion = visitVarSuffix(suffix).as<std::shared_ptr<expression::variable_suffix>>();
+			suffix_list.push_back(std::move(suffix_expresion));
+		}
+
+		const auto symbol_name = variable_name->to_string();
+
+		auto variable_node = std::make_shared<expression::variable>(std::move(variable_name), std::move(suffix_list));
+		
+		return std::static_pointer_cast<expression_t>(variable_node);
+	}
+
+	antlrcpp::Any cst_visitor::visitPrefixexp(LuaParser::PrefixexpContext* ctx) {
+		expression::name_and_args_t call_parameters;
+		for (auto parameter : ctx->nameAndArgs()) {
+			auto parameter_value = visitNameAndArgs(parameter).as<std::shared_ptr<expression::name_and_args>>();
+			call_parameters.push_back(std::move(parameter_value));
+		}
+
+		std::shared_ptr<expression_t> expression_name = nullptr;
+
+		auto var_or_exp = ctx->varOrExp();
+		if (auto prefix_expression = var_or_exp->exp())
+			expression_name = visitExp(prefix_expression).as<std::shared_ptr<expression_t>>();
+		else if (auto prefix_variable = var_or_exp->var())
+			expression_name = visitVar(prefix_variable).as<std::shared_ptr<expression_t>>();
+
+		if (call_parameters.empty())
+			return expression_name;
+
+		auto call_expression = std::make_shared<expression::function_call>(std::move(expression_name), std::move(call_parameters));
+
+		return std::static_pointer_cast<expression_t>(call_expression);
+	}
+
 }
