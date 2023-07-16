@@ -39,6 +39,50 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
 
                     break;
                 }
+                case deserializer_enums::process_order::instructions: {
+                    // process instructions (not metamorphic)
+                    const auto instruction_max_size = deserializer_helper_object->get_bits<std::int32_t>();
+
+                    for (auto i = 0l; i < instruction_max_size; ++i) {
+                        const auto instruction_descriptor = deserializer_helper_object->get_bits<std::int8_t>();
+                        if (deserializer_helper_object->get_bits(instruction_descriptor, 1, 1) == 0) {
+                            const auto instruction_bitfield_1 = deserializer_helper_object->get_bits(instruction_descriptor, 2, 3);
+                            const auto instruction_bitfield_2 = deserializer_helper_object->get_bits(instruction_descriptor, 4, 6);
+
+                            // straight pass = UB idiot
+                            const auto virtual_opcode = deserializer_helper_object->get_bits<std::int16_t>();
+                            const auto new_instruction_a = deserializer_helper_object->get_bits<std::int16_t>();
+
+                            auto new_instruction = std::make_unique<vm_arch::instruction>(virtual_opcode, new_instruction_a);
+
+                            const auto instruction_type = static_cast<enum vm_arch::instruction_type>(instruction_bitfield_1);
+                            new_instruction->type = instruction_type;
+
+                            switch (instruction_type) {
+                                case vm_arch::instruction_type::abc: {
+                                    new_instruction->b = deserializer_helper_object->get_bits<std::int16_t>();
+                                    new_instruction->c = deserializer_helper_object->get_bits<std::int16_t>();
+                                    break;
+                                }
+                                case vm_arch::instruction_type::abx: {
+                                    new_instruction->bx = deserializer_helper_object->get_bits<std::int32_t>();
+                                    break;
+                                }
+                                case vm_arch::instruction_type::asbx: {
+                                    new_instruction->sbx = deserializer_helper_object->get_bits<std::int32_t>() - std::numeric_limits<unsigned short>::max() - 1;
+                                    break;
+                                }
+                                case vm_arch::instruction_type::asbxc: {
+                                    new_instruction->sbx = deserializer_helper_object->get_bits<std::int32_t>() - std::numeric_limits<unsigned short>::max() - 1;
+                                    new_instruction->c = deserializer_helper_object->get_bits<std::int16_t>();
+                                    break;
+                                }
+                            }
+
+                        }
+                    }
+                    break;
+                }
             }
         }
 
