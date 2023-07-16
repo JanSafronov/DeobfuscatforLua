@@ -15,11 +15,32 @@ namespace deobf::ironbrew_devirtualizer::vm_handler_identifiers {
 					if (expression_string == "( instruction_opcode_a == instruction_opcode_c )") {
 						return vm_arch::opcode::op_eq3;
 					}
+					else if (expression_string == "( stack[instruction_opcode_a] == instruction_opcode_c )") {
+						return vm_arch::opcode::op_eq2;
+					}
+					else if (expression_string == "( instruction_opcode_a == stack[instruction_opcode_c] )") {
+						return vm_arch::opcode::op_eq1;
+					}
+					else if (expression_string == "( stack[instruction_opcode_a] == stack[instruction_opcode_c] )") {
+						return vm_arch::opcode::op_eq;
+					}
 
 					// ne
 
 					if (expression_string == "( instruction_opcode_a ~= instruction_opcode_c )") {
 						return vm_arch::opcode::op_ne3;
+					}
+
+					if (expression_string == "( stack[instruction_opcode_a] ~= instruction_opcode_c )") {
+						return vm_arch::opcode::op_ne2;
+					}
+
+					if (expression_string == "( instruction_opcode_a ~= stack[instruction_opcode_c] )") {
+						return vm_arch::opcode::op_ne1;
+					}
+
+					if (expression_string == "( stack[instruction_opcode_a] ~= stack[instruction_opcode_c] )") {
+						return vm_arch::opcode::op_ne;
 					}
 				}
 			}
