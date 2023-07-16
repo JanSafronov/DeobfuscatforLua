@@ -68,4 +68,24 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
 
 			return false;
 		}
+
+		bool accept(ir::statement::for_step* statement) override {
+			auto end_string = statement->end->to_string();
+
+			if (auto symbol = object.deserializer_ctx->root->find_symbol(end_string)) {
+				if (symbol->symbol_value->to_string() == "get_32_bits()") { // only constants do this. mark
+					object.deserializer_ctx->chunk_order.push_back(deserializer::process_order::constants);
+
+					auto constant_check = statement->body->find_first_of<ir::statement::if_statement>();
+					if (constant_check.has_value()) {
+						const auto& if_statement = constant_check->get();
+						if (if_statement.else_if_statements.size() == 2) {
+							populate_constant_order(&if_statement);
+						}
+					}
+				}
+			}
+
+			return false;
+		}
 }
