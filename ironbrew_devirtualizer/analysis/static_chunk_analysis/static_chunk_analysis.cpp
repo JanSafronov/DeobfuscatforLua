@@ -197,5 +197,59 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis {
 		}
 	}
 
+	// populates chunk header for VM optimizations
+	void static_chunk_analysis::chunk_header_vm_optimizations(vm_arch::vanilla_proto* proto) {
+		/*const auto max_upvalue_instruction = std::max_element(current_proto->code.cbegin(), current_proto->code.cend(), [](const auto& maximum, const auto& current) {
+			// B + 1 = upvalue size
+			if (current->opcode == vm_arch::vanilla_opcode::op_setupval || current->opcode == vm_arch::vanilla_opcode::op_getupval) {
+				return maximum->b < current->b;
+			}
 
+			return false;
+		});
+
+		if (max_upvalue_instruction->get()->op == vm_arch::opcode::op_setupval || max_upvalue_instruction->get()->opcode == vm_arch::opcode::op_getupval) {
+			current_proto->num_upvalues = max_upvalue_instruction->get()->b + 1;
+		}*/
+		
+		std::size_t num_upvalues = 0;
+		for (auto& instruction : proto->code) {
+			if (instruction->opcode == vm_arch::vanilla_opcode::op_getupval || instruction->opcode == vm_arch::vanilla_opcode::op_setupval) {
+				if (num_upvalues < instruction->b + 1) {
+					num_upvalues = instruction->b + 1;
+				}
+			}
+		}
+
+		proto->num_upvalues = num_upvalues;
+
+		// populate vararg flag
+		bool is_vararg = false;
+		for (auto& instruction : proto->code) {
+			if (instruction->opcode == vm_arch::vanilla_opcode::op_vararg) {
+				is_vararg = true;
+				break;
+			}
+		}
+
+		// populate stack size
+		std::size_t max_stack_size = 0;
+
+		for (auto& instruction : proto->code) {
+			if (instruction->a + 1 > max_stack_size) {
+				max_stack_size = instruction->a + 1;
+			}
+		}
+		proto->max_stack_size = max_stack_size;
+
+		// parameters reserve registers in the stack aswell
+		/*if (current_proto->num_params == 0) { // 1 free slot?
+			current_proto->max_stack_size++;
+		}*/
+
+		// populate vararg flag
+
+		proto->is_vararg = (is_vararg ? 3 : 2);
+	}
+	}
 }
