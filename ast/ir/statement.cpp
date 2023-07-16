@@ -323,4 +323,33 @@ namespace deobf::ast::ir::statement {
 			body->accept(visitor);
 		}
 	}
+
+	// if statement
+
+	bool if_statement::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::string if_statement::to_string() const {
+		return "if " + condition->to_string() + " then";
+	}
+
+	std::vector<std::shared_ptr<node>> if_statement::get_children() const {
+		return { condition, body };
+	}
+
+	void if_statement::accept(abstract_visitor_pattern* visitor) { // todo : modify this so if accepting the condition evalutes false the visitor will stop
+		if (visitor->accept(this)) {
+			condition->accept(visitor);
+			body->accept(visitor);
+			for (auto& [condition, body] : else_if_statements) {
+				condition->accept(visitor);
+				body->accept(visitor);
+			}
+
+			if (else_body.has_value()) {
+				else_body.value()->accept(visitor);
+			}
+		}
+	}
 }
