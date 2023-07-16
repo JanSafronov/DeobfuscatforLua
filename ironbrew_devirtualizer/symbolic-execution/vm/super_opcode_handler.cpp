@@ -63,6 +63,29 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::vm {
 		};
 	};
 
+	// handles opcodes & superops from body, and forwards them to callback_functor
+	void opcode_handler_computer::handle(vm_arch::instruction& instruction, ir::statement::block* body) { // instruction = std::ref(chunk.at(x))
+		using name_type = typename ir::expression::name_list_t::value_type;
+		using variable_type = typename ir::expression::variable_list_t::value_type;
+		
+		static instruction_propagator propagator_visitor{ "instruction_opcode_virtual", "instruction_opcode_a", "instruction_opcode_b", "instruction_opcode_c" };
+
+
+		//const auto old_parent = body->parent;
+
+		auto new_block = std::make_unique<ir::statement::block>(body); // parent is body for symbol search cases
+		
+		//body->parent = new_block.get();
+
+		propagator_visitor.rebase_group.first = body;
+
+		// IMPORTANT : make sure we have a symbol renamer before using this (important for producing hashes of declarations)
+		auto super_op_references = std::unordered_set<std::string>{ }; // stores hashes of declarations inside.
+
+		// memoization being done on visitor
+
+		memoized_virtuals.try_emplace(instruction.virtual_opcode, std::vector<vm_arch::opcode>{ });
+
 		flush_body(); // final body
 
 		//body->parent = old_parent;
