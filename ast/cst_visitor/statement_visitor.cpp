@@ -100,4 +100,44 @@ namespace deobf::ast {
 		return std::static_pointer_cast<ir::statement::statement>(repeat_statement);
 	}
 
+	antlrcpp::Any cst_visitor::visitIfStat(LuaParser::IfStatContext* ctx) {
+		auto if_condition = visitExp(ctx->exp().front()).as<std::shared_ptr<ir::expression_t>>();
+		auto if_body = visitBlock(ctx->block().front()).as<std::shared_ptr<ir::statement::block>>();
+
+		auto else_if_statements = statement::if_statement::multi_statements{ }; // elseif statement chain
+		std::shared_ptr<ir::statement::block> else_statement = nullptr;
+
+		for (auto i = 1; i < ctx->exp().size(); ++i) {
+			auto condition = visitExp(ctx->exp()[i]).as<std::shared_ptr<ir::expression_t>>();
+			auto body = visitBlock(ctx->block()[i]).as<std::shared_ptr<ir::statement::block>>();
+
+			else_if_statements.emplace_back(std::move(condition), std::move(body));
+		}
+
+		if (ctx->ELSE() != nullptr) {
+			auto else_body = visitBlock(ctx->block().back()).as<std::shared_ptr<ir::statement::block>>();
+
+			auto if_statement = std::make_shared<ir::statement::if_statement>(std::move(if_condition),
+				std::move(if_body),
+				std::move(else_if_statements),
+				std::move(else_body));
+
+			return std::static_pointer_cast<ir::statement::statement>(if_statement);
+		}
+
+		auto if_statement = std::make_shared<ir::statement::if_statement>(std::move(if_condition),
+			std::move(if_body),
+			std::move(else_if_statements));
+
+		return std::static_pointer_cast<ir::statement::statement>(if_statement);
+	}
+
+	antlrcpp::Any cst_visitor::visitWhileStat(LuaParser::WhileStatContext* ctx) {
+		auto while_condition = visitExp(ctx->exp()).as<std::shared_ptr<ir::expression::expression>>();
+		auto while_body = visitBlock(ctx->block()).as<std::shared_ptr<ir::statement::block>>();
+
+		auto while_statement = std::make_shared<ir::statement::while_statement>(std::move(while_condition), std::move(while_body));
+
+		return std::static_pointer_cast<ir::statement::statement>(while_statement);
+	}
 }
