@@ -82,4 +82,65 @@ namespace deobf::ast {
 
 		return name_and_args_node;
 	}
+	
+	antlrcpp::Any cst_visitor::visitString(LuaParser::StringContext* ctx) {
+		const auto string_value = ctx->getText();
+		
+		std::string init_value; 
+		switch (string_value.front()) {
+			case '[': {
+				const auto start_delimeter = string_value.find('[', 1) + 1;
+				const auto end_delimeter = string_value.find_last_of(']', string_value.size() - 2);
+				init_value = string_value.substr(start_delimeter, end_delimeter - start_delimeter);
+				break;
+			}
+			case '\'': // unused fallthough fornow
+				init_value = string_value.substr(1, string_value.size() - 2);
+				break;
+			case '"':
+				init_value = string_value.substr(1, string_value.size() - 2);
+				break;
+			default:
+				throw std::logic_error("string_literal error");
+		}
+
+		auto string_literal = std::make_shared<expression::string_literal>(init_value);
+
+		return std::static_pointer_cast<expression_t>(string_literal);
+	}
+
+	antlrcpp::Any cst_visitor::visitFunctioncall(LuaParser::FunctioncallContext* ctx) {
+		expression::name_and_args_t arguments;
+		for (const auto name : ctx->nameAndArgs()) {
+			auto result = visitNameAndArgs(name).as<std::shared_ptr<expression::name_and_args>>();
+			arguments.push_back(std::move(result));
+		}
+
+		std::shared_ptr<expression_t> expression_name = nullptr;
+
+		auto var_or_exp = ctx->varOrExp();
+		if (auto prefix_expression = var_or_exp->exp()) {
+			expression_name = visitExp(prefix_expression).as<std::shared_ptr<expression_t>>();
+		}
+		else if (auto prefix_variable = var_or_exp->var()) {
+			auto name = visitVar(prefix_variable).as<std::shared_ptr<expression_t>>();
+			expression_name = std::move(name);
+		}
+
+		auto call_expression = std::make_shared<expression::function_call>(std::move(expression_name), std::move(arguments));
+
+		return std::static_pointer_cast<statement::statement>(call_expression);
+	}
+
+	antlrcpp::Any cst_visitor::visitVarDecl(LuaParser::VarDeclContext* ctx) {
+		auto variables = visitVarlist(ctx->varlist()).as<ir::expression::variable_list_t>();
+
+		ir::expression::expression_list_t expressions;
+		if (auto expression_list = ctx->explist())
+			expressions = visitExplist(expression_list).as<ir::expression::expression_list_t>();
+
+		auto variable_node = std::make_shared<ir::statement::variable_assign>(std::move(variables), std::move(expressions)); // statement
+
+		return std::static_pointer_cast<statement::statement>(variable_node);
+	}
 }
