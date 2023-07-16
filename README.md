@@ -1,6 +1,6 @@
 # Deobfuscator for Lua
 
-Unofficial Ironbrew deobfuscator endowed with full deobf engine with luraph propagation.
+Unofficial Ironbrew deobfuscator endowed with full deobf engine and luraph propagation.
 
 This is an ongoing project, feel free to contribute with original ideas.
 
