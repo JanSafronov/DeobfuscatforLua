@@ -352,4 +352,28 @@ namespace deobf::ast::ir::statement {
 			}
 		}
 	}
+
+
+	// break statement
+	
+	void break_statement::accept(abstract_visitor_pattern* visitor) {
+		visitor->accept(this);
+	}
+
+	// semicolon
+
+	void semicolon::accept(abstract_visitor_pattern* visitor) {
+		visitor->accept(this);
+	}
+
+
+	// symbol table
+
+	bool symbol_info::is_known_symbol() const noexcept {
+		/*if (std::holds_alternative<std::shared_ptr<expression::string_literal>>(symbol_value)) {
+			return known_symbol_names.count(std::get<0>(symbol_value)->to_string());
+		}*/
+
+		return known_symbol_names.count(symbol_value->to_string()); // is global
+	}
 }
