@@ -141,4 +141,66 @@ namespace deobf::ast::ir::statement {
 
 		return stream.str();
 	}
+
+	bool local_declaration::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::vector<std::shared_ptr<node>> local_declaration::get_children() const {
+		auto children_vector = std::vector<std::shared_ptr<node>>{ };
+
+		std::copy(names.begin(), names.end(), std::back_inserter(children_vector));
+		std::copy(body.begin(), body.end(), std::back_inserter(children_vector));
+
+		return children_vector;
+	}
+
+	void local_declaration::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			for (auto& name : names)
+				name->accept(visitor);
+			for (auto& expression : body)
+				expression->accept(visitor);
+		}
+	}
+
+	// variable assign
+
+	std::string variable_assign::to_string() const {
+		std::ostringstream stream;
+
+		if (!variables.empty()) {
+			std::transform(variables.cbegin(), variables.cend() - 1, std::ostream_iterator<std::string>(stream, ","), [&stream](const auto& value) {
+				return value->to_string();
+			});
+
+			stream << variables.back()->to_string();
+		}
+
+		if (!expressions.empty()) {
+			stream << " = ";
+
+			std::transform(expressions.cbegin(), expressions.cend() - 1, std::ostream_iterator<std::string>(stream, ","), [&stream](const auto& value) {
+				return value->to_string();
+			});
+
+			stream << expressions.back()->to_string();
+		}
+
+
+		return stream.str();
+	}
+
+	bool variable_assign::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::vector<std::shared_ptr<node>> variable_assign::get_children() const {
+		auto children_vector = std::vector<std::shared_ptr<node>>{ };
+
+		std::copy(variables.begin(), variables.end(), std::back_inserter(children_vector));
+		std::copy(expressions.begin(), expressions.end(), std::back_inserter(children_vector));
+
+		return children_vector;
+	}
 }
