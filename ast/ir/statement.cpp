@@ -203,4 +203,41 @@ namespace deobf::ast::ir::statement {
 
 		return children_vector;
 	}
+
+	void variable_assign::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			for (auto& variable : variables)
+				variable->accept(visitor);
+			for (auto& expression : expressions)
+				expression->accept(visitor);
+		}
+	}
+	
+	// for step
+
+	std::string for_step::to_string() const {
+		std::ostringstream stream;
+		
+		stream << "for " << name->value << " = " << init->to_string() << ", " << end->to_string();
+
+		if (step.has_value())
+			stream << ", " << step.value();
+
+		return stream.str();
+	}
+
+	bool for_step::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::vector<std::shared_ptr<node>> for_step::get_children() const {
+		auto children_vector = std::vector<std::shared_ptr<node>>{ name, init, end };
+
+		if (step.has_value())
+			children_vector.push_back(step.value());
+
+		children_vector.push_back(body);
+
+		return children_vector;
+	}
 }
