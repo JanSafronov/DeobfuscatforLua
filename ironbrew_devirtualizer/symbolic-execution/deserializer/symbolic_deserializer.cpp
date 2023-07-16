@@ -126,4 +126,16 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
 		//std::unique_ptr<vm_arch::proto> current_chunk; // current write chunk
 		symoblic_deserializer& const object; // holds a reference to deserializer object
 	};
+
+    void symoblic_deserializer::run() {
+		deserializer_visitor optimizer(*this);
+
+		deserializer_ctx->root->accept(&optimizer);
+
+		if (deserializer_ctx->constant_order_mapping.size() != max_constant_order) {
+			throw std::runtime_error("constant_order does not sum up to max_constant_order");
+		}
+
+		deserializer_ctx->chunk_order.shrink_to_fit();
+	}
 }
