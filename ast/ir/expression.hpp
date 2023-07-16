@@ -162,4 +162,32 @@ namespace deobf::ast::ir::expression {
 
         void accept(abstract_visitor_pattern* visitor) final override;
     };
+
+    struct boolean_literal final : public literal_base {
+        bool value;
+
+        std::string to_string() const final override {
+            return value ? "true" : "false";
+        }
+
+        [[nodiscard]] bool equals(const node* other_node) const final override;
+
+        explicit boolean_literal(bool value) : value(value) { };
+
+        void accept(abstract_visitor_pattern* visitor) final override;
+    };
+
+    struct string_literal final : public literal_base {
+        std::string value;
+
+        std::string to_string() const final override {
+            return value;
+        }
+
+        [[nodiscard]] bool equals(const node* other_node) const final override;
+
+        explicit string_literal(const std::string& value) : value(value) { }
+
+        void accept(abstract_visitor_pattern* visitor) final override;
+    };
 }
