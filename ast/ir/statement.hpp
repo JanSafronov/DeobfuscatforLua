@@ -362,5 +362,62 @@ namespace deobf::ast::ir {
 
             void accept(abstract_visitor_pattern* visitor) override;
         };
+
+        struct repeat final : public statement { // repeat BODY until (CONDITION)
+            std::shared_ptr<block> body;
+            std::shared_ptr<expression_t> condition;
+
+            [[nodiscard]] bool equals(const node* other_node) const override;
+
+            std::string to_string() const override {
+                return "repeat";
+            }
+
+            std::vector<std::shared_ptr<node>> get_children() const override;
+
+            explicit repeat(std::shared_ptr<block> body, std::shared_ptr<expression_t> condition) :
+                body(std::move(body)),
+                condition(std::move(condition))
+            { }
+
+            void accept(abstract_visitor_pattern* visitor) override;
+        };
+
+        struct if_statement final : public statement {
+            using multi_statements = std::vector<std::pair<std::shared_ptr<expression_t>, std::shared_ptr<block>>>;
+
+            std::shared_ptr<expression_t> condition;
+            std::shared_ptr<block> body;
+
+            [[nodiscard]] bool equals(const node* other_node) const override;
+
+            multi_statements else_if_statements;
+
+            std::optional<std::shared_ptr<block>> else_body; // thought to use optional on this, just incase use empty else case
+
+            std::string to_string() const override;
+
+            std::vector<std::shared_ptr<node>> get_children() const override;
+
+            explicit if_statement(std::shared_ptr<expression_t> condition, std::shared_ptr<block> body) :
+                condition(std::move(condition)),
+                body(std::move(body))
+            { }
+
+            explicit if_statement(std::shared_ptr<expression_t> condition, std::shared_ptr<block> body, multi_statements else_if_statements) :
+                condition(std::move(condition)),
+                body(std::move(body)),
+                else_if_statements(std::move(else_if_statements))
+            { }
+
+            explicit if_statement(std::shared_ptr<expression_t> condition, std::shared_ptr<block> body, multi_statements else_if_statements, std::shared_ptr<block> else_body) :
+                condition(std::move(condition)),
+                body(std::move(body)),
+                else_if_statements(std::move(else_if_statements)),
+                else_body(std::move(else_body))
+            { }
+
+            void accept(abstract_visitor_pattern* visitor) override;
+        };
     }
 }
