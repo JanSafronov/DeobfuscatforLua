@@ -251,5 +251,28 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis {
 
 		proto->is_vararg = (is_vararg ? 3 : 2);
 	}
+
+	//struct duplicate_set_hash final {
+	//	inline std::size_t operator()(const std::pair<std::string, std::size_t>& pair) const {
+	//		return std::hash<std::string>{ }(pair.first) ^ pair.second;
+	//	}
+	//};
+
+	void static_chunk_analysis::eliminate_duplicated_constants() {
+		// no STL because sucks
+
+		std::unordered_set<std::string> string_constants(chunk->constants.size());
+		std::unordered_map<std::string, std::ptrdiff_t> constant_mapping(chunk->constants.size());
+		auto constant_shift_factor = 0;
+
+		auto shift_constant_value = [](vm_arch::instruction& owner, int old_index, int new_index) {
+			if (owner.is_ka && owner.a == old_index) {
+				owner.a = new_index;
+			}
+
+			if (owner.is_kc && owner.c == old_index) {
+				owner.c = new_index;
+			}
+		};
 	}
 }
