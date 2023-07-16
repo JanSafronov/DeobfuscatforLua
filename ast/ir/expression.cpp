@@ -114,4 +114,44 @@ namespace deobf::ast::ir::expression {
 	bool unary_expression::equals(const node* other_node) const {
 		return false;
 	}
+
+	std::vector<std::shared_ptr<node>> unary_expression::get_children() const {
+		return { body };
+	}
+
+	void unary_expression::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this))
+			body->accept(visitor);
+	}
+
+	// table
+
+	std::string table::to_string() const {
+		std::ostringstream stream;
+		stream << "{ ";
+
+		for (auto& [key, value] : entries) {
+			stream << '[' << key->to_string() << "] = " << value->to_string() << ", ";
+		}
+		stream << "}";
+
+	
+		return stream.str();
+	}
+
+	bool table::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::vector<std::shared_ptr<node>> table::get_children() const
+	{
+		auto children_vector = std::vector<std::shared_ptr<node>>{ };
+
+		for (auto& [key, value] : entries) {
+			children_vector.push_back(key);
+			children_vector.push_back(value);
+		}
+
+		return children_vector;
+	}
 }
