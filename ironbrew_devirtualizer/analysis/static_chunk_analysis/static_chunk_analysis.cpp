@@ -270,9 +270,54 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis {
 				owner.a = new_index;
 			}
 
+			if (owner.is_kb) {
+				if (owner.b > 0 && owner.b == old_index) {
+					owner.b = new_index;
+				}
+				else if (owner.bx == old_index) {
+					owner.bx = new_index;
+				}
+			}
+
 			if (owner.is_kc && owner.c == old_index) {
 				owner.c = new_index;
 			}
 		};
+
+		auto current_index = 0ul;
+
+		for (auto it = chunk->constants.begin(); it != chunk->constants.end(); ++it) {
+			++current_index;
+
+			auto& current_constant = (*it);
+			if (current_constant->get_constant_type() == constant::constant_type::string) {
+				//const auto index_difference = std::distance(chunk->constants.begin(), it);
+
+				const auto result = std::get<std::string>(current_constant->value);
+				if (string_constants.count(result)) { // duplicate detected
+					auto index = constant_mapping.find(result)->second;
+					for (const auto& instruction : current_constant->owners) {
+						auto& owner = const_cast<vm_arch::instruction&>(instruction.get());
+						shift_constant_value(owner, current_index, index);
+					}
+
+					it = chunk->constants.erase(it);
+
+					--constant_shift_factor, --it;
+					continue;
+				}
+
+				if (constant_shift_factor != 0) {
+					for (const auto& instruction : current_constant->owners) {
+						auto& owner = const_cast<vm_arch::instruction&>(instruction.get());
+						shift_constant_value(owner, current_index, current_index + constant_shift_factor);
+					}
+				}
+
+				string_constants.emplace(result);
+				constant_mapping.emplace(result, current_index);
+			}
+		}
+	}
 	}
 }
