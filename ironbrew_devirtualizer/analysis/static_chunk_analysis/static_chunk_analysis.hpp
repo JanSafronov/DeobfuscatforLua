@@ -24,6 +24,15 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis {
 		std::map<const vm_arch::instruction*, std::size_t> instruction_pc_mapping;
 		std::map<const vm_arch::instruction*, const vm_arch::instruction*> instruction_sucessor_mapping; // use incase target basic block generation PC is stripped
 		std::unordered_map<std::size_t, std::size_t> shifted_constant_mapping; // shift constant table after DCE
+
+		void populate_constant_owners();
+		void remove_dead_constants();
+		void eliminate_duplicated_constants();
+
+		void propagate_instructions_pc();
+		void fix_branch_targets();
+		void populate_instructions();
+		void optimize_cflow_calls();
 	
 		static void chunk_header_vm_optimizations(vm_arch::vanilla_proto* proto);
 	public:
