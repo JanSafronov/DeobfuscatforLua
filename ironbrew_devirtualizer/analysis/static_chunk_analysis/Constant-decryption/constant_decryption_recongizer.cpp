@@ -111,6 +111,69 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis::constant_decrypt
 
 
 					std::pair<std::int32_t, std::string> symmetric_circular_buffer, encrypted_parameter;
+
+					// continue traversing
+					while (!current_predecessor.expired()) {
+						auto predecessor_result = current_predecessor.lock();
+
+						if (predecessor_result->instructions.back().get().op == opcode::op_forprep && predecessor_result->instructions.size() == 5) {
+							// populate circular buffer kst
+							{
+								auto first_instruction = predecessor_result->instructions.front();
+								if (first_instruction.get().op == opcode::op_loadk && first_instruction.get().a == circular_buffer_reference) {
+							
+									const auto circular_buffer_kst = analyzer.chunk->constants.at(first_instruction.get().bx - 1).get();
+
+									if (circular_buffer_kst->get_constant_type() == constant::constant_type::string)
+										symmetric_circular_buffer = std::make_pair(first_instruction.get().bx - 1, std::get<std::string>(circular_buffer_kst->value));
+								}
+							}
+
+
+							// parameter (rebased at inlined func begin)
+							{
+								// FORPREP target -> forloop, extract forpreps
+								auto start_block = predecessor_result->block_predecessors.back().lock()->block_predecessors.back().lock(); // save this
+								start_block->instructions.at(0).get().print();
+								for (auto current_ins = start_block->instructions.crbegin(); current_ins != start_block->instructions.crend(); ++current_ins) {
+									if (current_ins->get().op == opcode::op_move && current_ins->get().a == parameter_reference) {
+										std::advance(current_ins, 4); // should be loadk and after that should be move (lazy to make it safer)
+										const auto parameter_kst = analyzer.chunk->constants.at(current_ins->get().bx - 1).get();
+										std::cout << current_ins->get().get_constant_targets() << std::endl;
+
+										if (parameter_kst->get_constant_type() == constant::constant_type::string)
+											encrypted_parameter = std::make_pair(current_ins->get().bx - 1, std::get<std::string>(parameter_kst->value));
+										
+										break;
+									}
+								}
+
+								current_predecessor = start_block;
+							}
+
+							break;
+						}
+
+						if (predecessor_result->block_predecessors.empty())
+							break;
+
+						current_predecessor = predecessor_result->block_predecessors.back();
+					}
+
+					// decrypt to result
+					
+					const auto decrypted_result = decrypt_string(encrypted_parameter.second, symmetric_circular_buffer.second);
+					std::cout << encrypted_parameter.second << std::endl;
+
+					// todo multithread job and thread safe
+					auto decryptor_job = constant_decryption::decryption_block_transformer{ decrypted_result, encrypted_parameter.first, analyzer, std::move(current_predecessor), std::move(final_block) };
+
+					block_transformers.emplace(decryptor_job);
+					std::cout << "decrypted constant result:" << decrypted_result << std::endl;
+					//decryptor_job.optimize();
+
+					//auto new_decryptor = std::make_unique<constant_decryption::decryption_job>(decrypted_result, encrypted_parameter.first, main_chunk, std::move(current_predecessor), std::move(final_block));
+					//decryption_queue.emplace(std::move(new_decryptor));
 				}
 			}
 
