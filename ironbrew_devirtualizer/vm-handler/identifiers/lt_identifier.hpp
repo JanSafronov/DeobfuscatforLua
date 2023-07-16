@@ -15,6 +15,22 @@ namespace deobf::ironbrew_devirtualizer::vm_handler_identifiers {
 					}
 
 					bool is_ge = (if_stat->body->body.at(0)->to_string() != "instruction_pointer = instruction_opcode_b");
+
+					if (expression_string == "( instruction_opcode_a < instruction_opcode_c )") {
+						return is_ge ? vm_arch::opcode::op_ge3 : vm_arch::opcode::op_lt3;
+					}
+
+					if (expression_string == "( stack[instruction_opcode_a] < instruction_opcode_c )") {
+						return is_ge ? vm_arch::opcode::op_ge2 : vm_arch::opcode::op_lt2;
+					}
+
+					if (expression_string == "( instruction_opcode_a < stack[instruction_opcode_c] )") {
+						return is_ge ? vm_arch::opcode::op_ge1 : vm_arch::opcode::op_lt1;
+					}
+
+					if (expression_string == "( stack[instruction_opcode_a] < stack[instruction_opcode_c] )") {
+						return is_ge ? vm_arch::opcode::op_ge : vm_arch::opcode::op_lt;
+					}
 				}
 			}
 
