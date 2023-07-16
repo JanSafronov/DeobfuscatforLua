@@ -83,4 +83,48 @@ namespace deobf::vm_arch::control_flow_graph {
 
 		return entry_block;
 	}
+
+	std::shared_ptr<basic_block> generate_graph(std::vector<std::unique_ptr<vm_arch::instruction>>& instructions) {
+		std::unordered_set<vm_arch::instruction*> labels;
+		std::cout << "generating graph\n";
+		// identify labels
+		labels.emplace(instructions.at(0).get()); // first instruction is always
+
+		auto pc_loc = std::size_t{ };
+		for (auto& instruction : instructions) {
+			++pc_loc; // increment pc loc on start so we can terminate our basic block with a branch instruction.
+
+			if (instruction->is_unconditional_jump()) {
+				// get target of the goto instruction
+				const auto target_pc = instruction->get_target_pc(pc_loc); // get the target address.
+				if (target_pc > 0 && target_pc < instructions.size()) { // check if target in domain
+					labels.emplace(instructions.at(target_pc).get());
+				}
+
+				// aswell as current instruction
+				if (pc_loc < instructions.size()) {
+					labels.emplace(instructions.at(pc_loc).get());
+				}
+
+			}
+			else if (instruction->op == vm_arch::opcode::op_return || instruction->op == vm_arch::opcode::op_return1 || instruction->op == vm_arch::opcode::op_return2 || instruction->op == vm_arch::opcode::op_return3 || instruction->op == vm_arch::opcode::op_return4) {
+				if (pc_loc < instructions.size()) {
+					labels.emplace(instructions.at(pc_loc).get()); // might have multiple returns
+				}
+			}
+		}
+
+		block_reference_t reference_block_map;
+
+		std::shared_ptr<basic_block> root_block = generate_basic_blocks(reference_block_map, 0, instructions, labels);
+
+		root_block->references = std::move(reference_block_map);
+
+		/*std::cout << "terminator test : " << root_block->target_block->target_block->is_terminator << std::endl;
+		for (auto& instr : root_block->next_block->instructions) {
+			std::cout << "instr:" << vm_arch::opcode_map[instr.get().op] << ' ' << instr.get().a << ' ' << instr.get().b << ' '<< instr.get().c << std::endl;
+		}*/
+
+		return root_block;
+	}
 }
