@@ -86,6 +86,46 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::vm {
 
 		memoized_virtuals.try_emplace(instruction.virtual_opcode, std::vector<vm_arch::opcode>{ });
 
+		const auto flush_body = [this, &new_block, &body, main_virtual = instruction.virtual_opcode]() {
+			const auto result = new_block.get();
+
+			if (!back_track.empty()) {
+				auto front_opcode = back_track.front();
+				back_track.pop_front();
+
+				// propagate instructions.
+				
+				propagator_visitor.rebase_group.second = result;
+				result->accept(&propagator_visitor);
+
+				
+				// handle garbage locals (todo better way?)
+				for (; !propagator_visitor.local_dfs_stack.empty(); propagator_visitor.local_dfs_stack.pop()) {
+					auto local = propagator_visitor.local_dfs_stack.top();
+					if (!local.expired()) {
+						auto shared_statement = local.lock().get();
+
+						if (auto iterator_result = std::find_if(result->body.begin(), result->body.end(), [&shared_statement](std::shared_ptr<ir::statement::statement> const& ptr) {
+								return shared_statement == ptr.get();
+							}); iterator_result != result->body.end()) {
+							result->body.erase(iterator_result);
+						}
+					}
+				}
+
+				//body->parent = old_parent;
+
+				const auto opcode_result = std::invoke(callback_functor, front_opcode, result); // forward result to client.
+				if (opcode_result == vm_arch::opcode::op_invalid) {
+					throw std::runtime_error("invalid opcode?");
+				}
+
+				memoized_virtuals.at(main_virtual).push_back(opcode_result);
+			}
+
+			new_block.reset(new ir::statement::block); // todo new ir::statement::block(body) instead so we wont have to rebase? maybe reliable?
+		};
+
 		flush_body(); // final body
 
 		//body->parent = old_parent;
