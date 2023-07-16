@@ -307,4 +307,87 @@ namespace deobf::ast {
 		return std::static_pointer_cast<expression_t>(call_expression);
 	}
 
+	antlrcpp::Any cst_visitor::visitExp(LuaParser::ExpContext* ctx) {
+		if (auto link_operator = ctx->linkOperator()) {
+			using binary_expression_t = typename expression::binary_expression;
+
+			// remember left > right
+			auto binary_lhs = visitExp(ctx->exp().front()).as<std::shared_ptr<expression_t>>();
+			auto binary_rhs = visitExp(ctx->exp().back()).as<std::shared_ptr<expression_t>>();
+
+			binary_expression_t::operation_t operation;
+			
+			const auto operation_text = link_operator->getText();
+
+			// make bidict?
+			if (const auto result = std::find_if(binary_expression_t::operation_map.cbegin(),
+				binary_expression_t::operation_map.cend(),
+				[operation_text](const auto& entry) {
+					return entry.second == operation_text;
+				}); result != binary_expression_t::operation_map.cend()) {
+				operation = result->first;
+			}
+
+			auto binary_expression = std::make_shared<binary_expression_t>(operation, std::move(binary_lhs), std::move(binary_rhs));
+
+			return std::static_pointer_cast<expression_t>(binary_expression);
+		}
+		else if (ctx->TRUE()) {
+			auto boolean_literal = std::make_shared<expression::boolean_literal>(true);
+			return std::static_pointer_cast<expression_t>(boolean_literal);
+		}
+		else if (ctx->FALSE()) {
+			auto boolean_literal = std::make_shared<expression::boolean_literal>(false);
+			return std::static_pointer_cast<expression_t>(boolean_literal);
+		}
+		else if (ctx->NIL()) {
+			auto nil_literal = std::make_shared<expression::nil_literal>();
+			return std::static_pointer_cast<expression_t>(nil_literal);
+		}
+		else if (auto number_value = ctx->number()) {
+			auto numeral_literal = std::make_shared<expression::numeral_literal>(number_value->getText());
+			return std::static_pointer_cast<expression_t>(numeral_literal);
+		}
+		else if (auto string_value = ctx->string()) {
+			//auto string_literal = std::make_shared<expression::string_literal>(string_value->getText());
+			return visitString(string_value).as<std::shared_ptr<expression_t>>();
+		}
+		else if (auto function_define = ctx->functiondef()) {
+			auto res = visitFunctiondef(function_define).as<std::shared_ptr<expression_t>>();
+			return res;
+		}
+		else if (auto table_constructor = ctx->tableconstructor()) {
+			return visitTableconstructor(table_constructor).as<std::shared_ptr<expression_t>>();
+		}
+		else if (auto unary_expression = ctx->unaryOperator()) {
+			using unary_expression_t = typename expression::unary_expression;
+
+			auto to_unary = visitExp(ctx->exp().front()).as<std::shared_ptr<expression_t>>();
+
+			unary_expression_t::operation_t operation;
+			
+			const auto operation_text = unary_expression->getText();
+
+			if (const auto result = std::find_if(unary_expression_t::operation_map.cbegin(),
+				unary_expression_t::operation_map.cend(),
+				[operation_text](const auto& entry) {
+					return entry.second == operation_text;
+				}); result != unary_expression_t::operation_map.cend()) {
+				operation = result->first;
+			}
+
+			auto unary_node = std::make_shared<unary_expression_t>(operation, std::move(to_unary));
+
+			return std::static_pointer_cast<expression_t>(unary_node);
+		}
+		else if (auto prefix_expression = ctx->prefixexp()) {
+			return visitPrefixexp(prefix_expression).as<std::shared_ptr<expression_t>>();
+		}
+		else if (auto ellipsis = ctx->ELLIPSIS()) {
+			auto string_literal = std::make_shared<expression::string_literal>("...");
+			return std::static_pointer_cast<expression_t>(string_literal);
+		}
+
+		return { };
+	}
 }
