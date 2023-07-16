@@ -40,6 +40,29 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::vm {
 			return __super::accept(statement);
 		}
 
+		bool accept(ir::expression::variable* expression) override {
+			if (const auto result = instruction_indice_mapping.find(expression->to_string()); result != instruction_indice_mapping.cend()) {
+				// transform node to be in its single form
+				expression->suffixes.clear();
+				expression->name->as<ir::expression::string_literal>()->value = result->second;
+			}
+
+			return __super::accept(expression);
+		}
+
+		std::stack<std::weak_ptr<ir::node>> local_dfs_stack;
+		std::pair<ir::statement::block*, ir::statement::block*> rebase_group;
+
+	private:
+		static inline std::unordered_map<std::string_view, std::string_view> instruction_indice_mapping {
+			{ "current_instruction[1]", "instruction_opcode_virtual" },
+			{ "current_instruction[2]", "instruction_opcode_a" },
+			{ "current_instruction[3]", "instruction_opcode_b" },
+			{ "current_instruction[4]", "instruction_opcode_c" },
+			//{ "current_instruction[5]", "instruction_opcode_unk" },
+		};
+	};
+
 		flush_body(); // final body
 
 		//body->parent = old_parent;
