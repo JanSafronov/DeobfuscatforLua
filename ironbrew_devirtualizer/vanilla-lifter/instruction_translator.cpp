@@ -421,6 +421,64 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 				new_instruction->c += 0xff;
 				break;
 			}
+
+			case vm_arch::opcode::op_gt: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+				break;
+			}
+			case vm_arch::opcode::op_gt1: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+
+				new_instruction->b += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_gt2: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+
+				new_instruction->c += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_gt3: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+
+				new_instruction->b += 0xff;
+				new_instruction->c += 0xff;
+				break;
+			}
+
+			case vm_arch::opcode::op_test: {
+				new_instruction->type = vm_arch::vanilla_instruction_type::ac;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = 0;
+				new_instruction->c = 0;
+				break;
+			}
+			case vm_arch::opcode::op_test1: {
+				new_instruction->type = vm_arch::vanilla_instruction_type::ac;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = 0;
+				new_instruction->c = 1;
+				break;
+			}
+
 		}
 
 		return std::move(new_instruction);
