@@ -169,6 +169,29 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 				new_instruction->c += 0xff;
 				break;
 			}
+
+			// arthimethic end...
+
+			case vm_arch::opcode::op_loadbool1: {
+				// flip loadbool flag
+				new_instruction->c = 1;
+				break;
+			}
+
+			case vm_arch::opcode::op_gettable1: { // gettablekst
+				new_instruction->c += 0xff;
+				break;
+			}
+
+			// ironbrew constant table is rebased to 1, doing the same to all instructions that perform kst
+			case vm_arch::opcode::op_getglobal: {
+				new_instruction->bx--; //--;
+				break;
+			}
+			case vm_arch::opcode::op_setglobal: {
+				new_instruction->bx--; //--;
+				break;
+			}
 		}
 
 		return std::move(new_instruction);
