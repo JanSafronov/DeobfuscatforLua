@@ -76,4 +76,28 @@ namespace deobf::ast {
 
 		return std::static_pointer_cast<ir::statement::statement>(function_node);
 	}
+
+
+	antlrcpp::Any cst_visitor::visitRetstat(LuaParser::RetstatContext* ctx) {
+
+		auto return_parameters = expression::expression_list_t{ };
+
+		if (auto expression_list = ctx->explist())
+			return_parameters = visitExplist(ctx->explist()).as<ir::expression::expression_list_t>();
+
+		auto return_statement = std::make_shared<ir::statement::return_statement>(std::move(return_parameters));
+
+		return return_statement;
+	}
+
+	antlrcpp::Any cst_visitor::visitRepeatStat(LuaParser::RepeatStatContext* ctx) {
+
+		auto repeat_body = visitBlock(ctx->block()).as<std::shared_ptr<ir::statement::block>>();
+		auto repeat_condition = visitExp(ctx->exp()).as<std::shared_ptr<ir::expression::expression>>();
+
+		auto repeat_statement = std::make_shared<ir::statement::repeat>(std::move(repeat_body), std::move(repeat_condition));
+
+		return std::static_pointer_cast<ir::statement::statement>(repeat_statement);
+	}
+
 }
