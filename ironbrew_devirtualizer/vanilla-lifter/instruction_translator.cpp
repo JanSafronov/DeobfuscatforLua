@@ -90,6 +90,29 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 				new_instruction->b += 0xff;
 				break;
 			}
+			case vm_arch::opcode::op_add2: {
+				new_instruction->c += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_add3: {
+				new_instruction->b += 0xff;
+				new_instruction->c += 0xff;
+				break;
+			}
+
+			case vm_arch::opcode::op_sub1: {
+				new_instruction->b += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_sub2: {
+				new_instruction->c += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_sub3: {
+				new_instruction->b += 0xff;
+				new_instruction->c += 0xff;
+				break;
+			}
 		}
 
 		return std::move(new_instruction);
