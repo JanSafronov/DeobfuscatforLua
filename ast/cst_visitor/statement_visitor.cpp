@@ -189,4 +189,54 @@ namespace deobf::ast {
 
 		return std::static_pointer_cast<ir::statement::statement>(for_step_statement);
 	}
+
+	antlrcpp::Any cst_visitor::visitDoStat(LuaParser::DoStatContext* ctx) {
+		auto scope = visitBlock(ctx->block()).as<std::shared_ptr<ir::statement::block>>();
+
+		auto do_block = std::make_shared<ir::statement::do_block>(std::move(scope));
+
+		return std::static_pointer_cast<ir::statement::statement>(do_block);
+	}
+
+	antlrcpp::Any cst_visitor::visitLocalVarDecl(LuaParser::LocalVarDeclContext* ctx) {
+		auto names = visitNamelist(ctx->namelist()).as<ir::expression::name_list_t>();
+
+		auto expressions = ir::expression::expression_list_t{ };
+
+		if (auto expression_list = ctx->explist()) {
+			expressions = visitExplist(expression_list).as<ir::expression::expression_list_t>();
+		}
+
+		auto local_node = std::make_shared<ir::statement::local_declaration>(std::move(names), std::move(expressions)); // statement
+
+		for (auto i = 0ul; i < local_node->names.size(); ++i) { // prob could use std::transform or something liek that idk
+			const auto name_value = local_node->names.at(i)->value;
+			local_node->names.at(i)->value = "v" + std::to_string(++variable_counter);
+			const auto expression_value = (i < local_node->body.size()) ? local_node->body.at(i) : std::make_shared<ir::expression::nil_literal>();
+
+			auto symbol = current_parse_block->insert_symbol(name_value);
+			
+			symbol.first->second->resolve_identifier = local_node->names.at(i)->value;
+			
+			
+			current_parse_block->insert_symbol<false>(local_node->names.at(i)->value, expression_value);
+		}
+
+		return std::static_pointer_cast<ir::statement::statement>(local_node);
+	}
+
+	antlrcpp::Any cst_visitor::visitStat(LuaParser::StatContext* ctx) {
+		if (ctx->BREAK() != nullptr) { // there is no function for break
+			auto break_statement = std::make_shared<ir::statement::break_statement>();
+
+			return std::static_pointer_cast<ir::statement::statement>(break_statement);
+		}
+		else if (ctx->SEMI() != nullptr) { // there is no function for semicolon aswell, empty statements
+			auto semicolon = std::make_shared<ir::statement::semicolon>();
+
+			return std::static_pointer_cast<ir::statement::statement>(semicolon); // todo clear semicolons?
+		}
+		
+		return visitChildren(ctx);
+	}
 }
