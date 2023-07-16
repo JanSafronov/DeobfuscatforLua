@@ -41,4 +41,39 @@ namespace deobf::ast {
 
 		return std::move(generated_block);
 	}
+
+	// main
+	
+	antlrcpp::Any cst_visitor::visitFuncStat(LuaParser::FuncStatContext* ctx) {
+		auto function_node = std::move(visitFuncbody(ctx->funcbody()).as<std::shared_ptr<ir::expression::function>>());
+		
+		function_node->function_name = ctx->funcname()->getText();
+
+		// we dont need to handle global functions in symbol table
+
+		//current_parse_block->insert_symbol(function_node->function_name.value(), function_node);
+		
+		function_node->type = expression::function::function_type::global_t;
+
+		return std::static_pointer_cast<ir::statement::statement>(function_node);
+	}
+
+	antlrcpp::Any cst_visitor::visitLocalFuncStat(LuaParser::LocalFuncStatContext* ctx) {
+		std::string function_name = "f" + std::to_string(++function_counter);
+
+		auto symbol = current_parse_block->insert_symbol(ctx->NAME()->getText());
+		symbol.first->second->resolve_identifier = function_name;
+
+		auto function_node = visitFuncbody(ctx->funcbody()).as<std::shared_ptr<ir::expression::function>>();
+
+		function_node->function_name = function_name;
+
+		symbol.first->second->symbol_value = function_node;
+
+		current_parse_block->insert_symbol<false>(function_name, function_node);
+
+		function_node->type = expression::function::function_type::local_t;
+
+		return std::static_pointer_cast<ir::statement::statement>(function_node);
+	}
 }
