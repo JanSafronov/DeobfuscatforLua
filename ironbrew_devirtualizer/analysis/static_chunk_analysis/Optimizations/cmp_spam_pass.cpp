@@ -76,4 +76,78 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis::optimizations::c
 		return_result:
 		return current_block;
 	}
+
+
+	std::size_t cmp_spam_pass::run(vm_arch::basic_block* first_block) {
+		std::size_t num_optimizations = 0;
+
+		auto current_block = first_block;
+		while (current_block) {
+			auto last_instruction = current_block->instructions.back();
+
+			auto last_opcode = last_instruction.get().op;
+
+			if (last_opcode >= vm_arch::opcode::op_eq && last_opcode <= vm_arch::opcode::op_ne3) {
+				auto& first_jmp = current_block->next_block; // jump to target block
+				auto& second_jmp = current_block->target_block; // jump to target's next block
+
+				if (!(first_jmp->instructions.size() == 1 && first_jmp->instructions.at(0).get().op == vm_arch::opcode::op_jmp))
+					goto continue_execution;
+
+				if (!(second_jmp->instructions.size() == 1 && second_jmp->instructions.at(0).get().op == vm_arch::opcode::op_jmp))
+					goto continue_execution;
+
+				auto new_target_block = identify_final_target_successor(last_instruction.get(), first_jmp);
+				auto target_result = new_target_block.lock();
+				
+
+				// terminator block (return) wont continue, usually appears on the first spam.
+				// will be optimized on topological sorting aswell
+
+				/*if (auto terminator_block = first_jmp->target_block->block_predecessors.front().lock(); terminator_block->is_terminator) {
+					std::cout << "aaa\n";
+					terminator_block->next_block = nullptr;
+					terminator_block->instructions.back().get().print();
+				}*/
+
+				for (auto& predecessor : first_jmp->target_block->block_predecessors) {
+					auto result = predecessor.lock();
+					if (result->is_terminator) {
+						result->next_block = nullptr;
+					}
+				}
+
+				current_block->target_block->instructions.at(0).get().print();
+				//std::cout << "t:" << first_jmp->target_block->block_predecessors.front().lock()->instructions.back().get().print() << std::endl;
+				std::cout << target_result->instructions.size() << std::endl;
+				target_result->instructions.at(0).get().print();
+
+				// link basic blocks
+				auto old_target = current_block->target_block;
+				old_target->next_block->instructions.back().get().print();
+				current_block->target_block = old_target->next_block;
+
+				target_result->next_block = current_block->target_block;//current_block->target_block;
+
+				current_block->next_block = target_result;
+
+				++num_optimizations;
+				//current_block->next_block->next_block->next_block->instructions.back().get().print();
+				
+				//first_jmp->block_sucessors.clear();
+				//second_jmp->block_sucessors.clear();
+
+				//current_block->next_block->next_block->next_block->instructions.at(0).get().print();
+
+
+				// todo unlink terminator (first_jmp's preceddor) from those
+
+				continue;
+			}
+			continue_execution:
+			current_block = current_block->next_block.get();
+		}
+
+		return num_optimizations;
+	}
 }
