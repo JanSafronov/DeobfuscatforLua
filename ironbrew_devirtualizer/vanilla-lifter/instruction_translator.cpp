@@ -208,6 +208,60 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 				new_instruction->b -= original_instruction->a - 1;
 				break;
 			}
+			case vm_arch::opcode::op_self1: {
+				new_instruction->c += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_forprep: {
+				new_instruction->sbx -= pc + 2;
+				break;
+			}
+			case vm_arch::opcode::op_forloop: {
+				new_instruction->sbx -= pc + 1;
+				break;
+			}
+
+			// logic/relational
+			case vm_arch::opcode::op_eq: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+				break;
+			}
+			case vm_arch::opcode::op_eq1: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+
+				new_instruction->b += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_eq2: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+				
+				new_instruction->c += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_eq3: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+				
+				new_instruction->b += 0xff;
+				new_instruction->c += 0xff;
+				break;
+			}
+
 		}
 
 		return std::move(new_instruction);
