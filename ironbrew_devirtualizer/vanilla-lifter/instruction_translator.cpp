@@ -192,6 +192,22 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 				new_instruction->bx--; //--;
 				break;
 			}
+			case vm_arch::opcode::op_loadk: {
+				new_instruction->bx--; //--;
+				break;
+			}
+			case vm_arch::opcode::op_return: { // R(A) ... R(A + B + 2)
+				new_instruction->b += 2;
+				break;
+			}
+			case vm_arch::opcode::op_vararg: { // R(A) ... R(A + B - 1)
+				new_instruction->b -= original_instruction->a - 1;
+				break;
+			}
+			case vm_arch::opcode::op_tailcall: {
+				new_instruction->b -= original_instruction->a - 1;
+				break;
+			}
 		}
 
 		return std::move(new_instruction);
