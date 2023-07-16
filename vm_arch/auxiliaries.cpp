@@ -159,4 +159,28 @@ namespace deobf::vm_arch::aux {
 
         return original;
     }
+    
+    vm_arch::opcode get_inverse_kst_optimized_logic_opcode(vm_arch::opcode original) {
+        if (auto result = kst_optimized_bidict.find(original); result != kst_optimized_bidict.cend())
+            return result->second;
+
+        return original;
+    }
+
+    bool is_kst_optimized_opcode(vm_arch::opcode original) {
+        if (auto result = kst_optimized_bidict.find(original); result != kst_optimized_bidict.cend()) {
+            return (result->second >= vm_arch::opcode::op_eq && result->second <= vm_arch::opcode::op_testset);
+        }
+
+        return false;
+    }
+
+
+    vm_arch::opcode get_normalized_opcode(vm_arch::opcode original) {
+        if (auto result = normalized_opcode_map.find(original); result != normalized_opcode_map.cend()) {
+            return result->second;
+        }
+
+        return original;
+    }
 }
