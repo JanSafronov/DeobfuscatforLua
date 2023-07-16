@@ -13,6 +13,15 @@ namespace deobf::ironbrew_devirtualizer::vm_handler_identifiers {
 					if (condition->operation == ir::expression::binary_expression::operation_t::gt && condition->right->to_string() == "0") {
 						if (auto symbol = path->find_symbol(condition->left->to_string())) {
 							if (symbol->symbol_value->to_string() == "stack[( instruction_opcode_a + 2 )]") {
+								if (if_stat->get().body->body.size() == 1) {
+									if (auto cond_0 = if_stat->get().body->body.at(0)->as<ir::statement::if_statement>()) {
+										if (auto bin_expr_0 = cond_0->condition->as<ir::expression::binary_expression>()) {
+											if (bin_expr_0->operation == ir::expression::binary_expression::operation_t::le) {
+												return vm_arch::opcode::op_forloop;
+											}
+										}
+									}
+								}
 
 								return vm_arch::opcode::op_forprep;
 							}
