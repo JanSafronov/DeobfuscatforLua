@@ -319,5 +319,36 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis {
 			}
 		}
 	}
+
+	void static_chunk_analysis::later_analysis(vm_arch::vanilla_proto* proto) {
+		chunk_header_vm_optimizations(proto);
+	}
+
+	void static_chunk_analysis::run_analysis() {
+		// populate constant references
+		populate_constant_owners();
+
+		// generate control flow graph
+		cfg_result = vm_arch::control_flow_graph::generate_graph(chunk->instructions);
+
+		// optimize branch flag flip trick
+		const auto test_flip_optimizations = optimizations::zeroflag_flip_pass::zeroflag_flip_pass{ }(cfg_result.get());
+
+		// todo rename control flow passes into better names (test spam to something else blah blah)
+
+		// apply maxCFG optimizations
+		if (chunk->is_chunk_cflow()) {
+
+			// TODO FIX EQ MUTATE
+			const auto eq_mutate_optimizations = optimizations::single_ref_jmp_pass::single_ref_jmp_pass{ }(cfg_result.get());
+
+			const auto test_preserve_optimizations = optimizations::regkst_propagation_pass::regkst_propagation_pass{ }(cfg_result.get());
+
+			const auto bounce_optimizations = optimizations::single_ref_jmp_pass::single_ref_jmp_pass{ }(cfg_result.get());
+
+			const auto test_spam_optimizations = optimizations::cmp_spam_pass::cmp_spam_pass{ }(cfg_result.get());
+
+			// todo calculate pass score and distrubtion for analysis.
+		}
 	}
 }
