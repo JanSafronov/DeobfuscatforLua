@@ -270,4 +270,47 @@ namespace deobf::ast::ir::expression {
 				suffix->accept(visitor);
 		}
 	}
+	// function call expression
+
+	std::string function_call::to_string() const {
+		std::ostringstream stream;
+
+		if (name.has_value())
+			stream << name.value()->to_string();
+
+		stream << '(';
+
+		for (auto& argument : arguments) {
+			stream << argument->to_string();
+		}
+		stream << ')';
+		
+		return stream.str();
+	}
+	
+	bool function_call::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::vector<std::shared_ptr<node>> function_call::get_children() const {
+		auto children_vector = std::vector<std::shared_ptr<node>>{ };
+		
+		if (name.has_value())
+			children_vector.push_back(name.value());
+
+		std::copy(arguments.begin(), arguments.end(), std::back_inserter(children_vector));
+
+		return children_vector;
+	}
+
+	void function_call::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			
+			if (name.has_value())
+				name.value()->accept(visitor);
+
+			for (auto& argument : arguments)
+				argument->accept(visitor);
+		}
+	}
 }
