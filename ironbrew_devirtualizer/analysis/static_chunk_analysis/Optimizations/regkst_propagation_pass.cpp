@@ -128,8 +128,36 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis::optimizations::r
 
 				if (!is_preserved_block(next_branch_block.get()) && !is_preserved_block(target_branch_block.get()))
 					goto continue_execution;
+
+				// omg exception safety when
+
+				//std::cout << "wew\n";
+				// erase shitty junk code
+				current_block->instructions.erase(current_block->instructions.end() - 3, current_block->instructions.end() - 1);
+				//std::cout << "c\n";
+				target_branch_block->instructions.at(0).get().print();
+
+				next_branch_block->instructions.erase(next_branch_block->instructions.begin(), next_branch_block->instructions.begin() + 2);
+				//std::cout << "d\n";
+				target_branch_block->instructions.at(0).get().print();
+
+				target_branch_block->instructions.erase(target_branch_block->instructions.begin(), target_branch_block->instructions.begin() + 2);
+				
+				++num_optimizations;
 			}
 
+			/*switch (last_instruction.get().op) {
+				// register manipulation operators only
+				case vm_arch::opcode::op_le:
+				case vm_arch::opcode::op_gt:
+				case vm_arch::opcode::op_ne:
+				case vm_arch::opcode::op_eq: {
+
+				}
+			}*/
+
+			continue_execution:
+			current_block = current_block->next_block.get();
 		}
 
 		return num_optimizations;
