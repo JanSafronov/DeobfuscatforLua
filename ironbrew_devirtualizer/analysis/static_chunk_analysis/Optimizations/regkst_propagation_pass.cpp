@@ -90,6 +90,22 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis::optimizations::r
 			else if (last_opcode == vm_arch::opcode::op_test ||
 				last_opcode == vm_arch::opcode::op_test1 ||
 				last_opcode == vm_arch::opcode::op_testset ||
+			last_opcode == vm_arch::opcode::op_testset1) {
+
+				// random junk registers
+				const auto junk_reg_1 = current_block->instructions.at(current_block->instructions.size() - 3);
+				const auto junk_reg_2 = current_block->instructions.at(current_block->instructions.size() - 2);
+
+				if (!(junk_reg_1.get().op == vm_arch::opcode::op_move && junk_reg_2.get().op == vm_arch::opcode::op_move))
+					goto continue_execution;
+
+				if (junk_reg_1.get().b != junk_reg_2.get().a || junk_reg_2.get().b != last_instruction.get().a)
+					goto continue_execution;
+
+				const auto random_slot1 = junk_reg_1.get().a;
+				const auto random_slot2 = junk_reg_1.get().b;
+			}
+
 		}
 
 		return num_optimizations;
