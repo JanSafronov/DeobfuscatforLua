@@ -134,4 +134,38 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis {
 			current_block = result_block->next_block;
 		}
 	}
+
+	void static_chunk_analysis::populate_instructions() {
+		std::weak_ptr<vm_arch::basic_block> current_block{ cfg_result };
+		while (!current_block.expired()) {
+			auto result_block = current_block.lock();
+			for (auto& instruction : result_block->instructions) {
+				instructions_result.emplace_back(std::make_unique<vm_arch::instruction>(instruction));
+			}
+
+			current_block = result_block->next_block;
+		}
+	}
+
+	void static_chunk_analysis::optimize_cflow_calls() {
+		if (!chunk->is_chunk_cflow())
+			return;
+
+		/*instructions_result.erase(instructions_result.cbegin()); // erase NEWSTACK
+
+		for (auto it = instructions_result.begin(); it != instructions_result.end(); ++it) {
+			auto& current_instruction = *it->get();
+			if (current_instruction.op == vm_arch::opcode::op_move && current_instruction.type == vm_arch::instruction_type::abc) {
+				if (current_instruction.a == 0 && current_instruction.b == 0 && current_instruction.c == 1) {
+					// remove previous MOVE
+					it--;
+
+					it = instructions_result.erase(it, it + 2);
+				}
+			}
+		}*/
+
+		cfg_result->instructions.erase(cfg_result->instructions.begin()); // erase NEWSTACK
+
+	}
 }
