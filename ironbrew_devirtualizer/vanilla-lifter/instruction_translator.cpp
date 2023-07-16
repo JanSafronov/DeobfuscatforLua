@@ -479,6 +479,53 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 				break;
 			}
 
+			case vm_arch::opcode::op_testset: {
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->b = original_instruction->c;
+				new_instruction->c = 0;
+				break;
+			}
+			case vm_arch::opcode::op_testset1: {
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->b = original_instruction->c;
+				new_instruction->c = 1;
+				break;
+			}
+			// target branches are patched on static chunk analysis, only encode 18 bit REL PC (relative pc) instead of BX
+			case vm_arch::opcode::op_jmp: {
+				// is bx on ironbrew
+				new_instruction->a = 0;
+				new_instruction->bx = 0;
+				new_instruction->sbx = original_instruction->sbx - pc - 1;
+				break;
+			}
+			
+			// call modes...
+			case vm_arch::opcode::op_call: {
+				new_instruction->b -= original_instruction->a - 1;
+				new_instruction->c -= original_instruction->a - 2;
+				break;
+			}
+			case vm_arch::opcode::op_call1:
+			case vm_arch::opcode::op_call2:
+			case vm_arch::opcode::op_call3: {
+				new_instruction->c -= original_instruction->a - 2;
+				break;
+			}
+			case vm_arch::opcode::op_call4:
+			case vm_arch::opcode::op_call5: 
+			case vm_arch::opcode::op_call6: {
+				new_instruction->b -= original_instruction->a - 1;
+				break;
+			}
+			case vm_arch::opcode::op_call12: {
+				new_instruction->b -= original_instruction->a - 1;
+				break;
+			}
+			default:
+				break;
 		}
 
 		return std::move(new_instruction);
