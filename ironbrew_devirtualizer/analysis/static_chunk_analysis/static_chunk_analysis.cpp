@@ -99,5 +99,39 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis {
 			}
 		}
 	}
+	
+	void static_chunk_analysis::propagate_instructions_pc() {
+		std::size_t current_pc = 0;
 
+		std::weak_ptr<vm_arch::basic_block> current_block{ cfg_result };
+		while (!current_block.expired()) {
+			auto result_block = current_block.lock();
+			for (auto& instruction : result_block->instructions) {
+				instruction_pc_mapping.emplace(&instruction.get(), current_pc);
+				++current_pc;
+			}
+
+			current_block = result_block->next_block;
+		}
+	}
+
+	void static_chunk_analysis::fix_branch_targets() {
+		std::weak_ptr<vm_arch::basic_block> current_block{ cfg_result };
+		while (!current_block.expired()) {
+			auto result_block = current_block.lock();
+			
+			if (!result_block->instructions.empty()) {
+				auto last_instruction = result_block->instructions.back();
+				auto last_opcode = last_instruction.get().op;
+				if (last_opcode == vm_arch::opcode::op_jmp || last_opcode == vm_arch::opcode::op_forprep || last_opcode == vm_arch::opcode::op_forloop) {
+					auto target_instruction = result_block->target_block->instructions.at(0);
+					if (auto pc_result = instruction_pc_mapping.find(&target_instruction.get()); pc_result != instruction_pc_mapping.end()) {
+						last_instruction.get().sbx = pc_result->second;
+					}
+				}
+			}
+
+			current_block = result_block->next_block;
+		}
+	}
 }
