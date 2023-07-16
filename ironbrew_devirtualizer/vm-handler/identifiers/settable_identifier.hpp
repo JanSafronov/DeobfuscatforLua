@@ -12,10 +12,21 @@ namespace deobf::ironbrew_devirtualizer::vm_handler_identifiers {
 					const auto assign_string = assign->to_string();
 
 					const auto is_stk = (assign_string == "stack[instruction_opcode_a][stack[instruction_opcode_b]] = stack[instruction_opcode_c]");
-					const auto is_kb = (assign_string == "stack[][instruction_opcode_b] = stack[]");
+					const auto is_kb = (assign_string == "stack[instruction_opcode_a][instruction_opcode_b] = stack[instruction_opcode_c]");
+					const auto is_kc = (assign_string == "stack[instruction_opcode_a][stack[instruction_opcode_b]] = instruction_opcode_c");
+					const auto is_kbc = (assign_string == "stack[instruction_opcode_a][instruction_opcode_b] = instruction_opcode_c");
 
 					if (is_stk) {
 						return vm_arch::opcode::op_settable;
+					}
+					else if (is_kb) {
+						return vm_arch::opcode::op_settable1;
+					}
+					else if (is_kc) {
+						return vm_arch::opcode::op_settable2;
+					}
+					else if (is_kbc) {
+						return vm_arch::opcode::op_settable3;
 					}
 				}
 			}
