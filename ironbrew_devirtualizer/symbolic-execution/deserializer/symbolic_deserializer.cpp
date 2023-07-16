@@ -104,10 +104,26 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
 				else {
 					auto if_statement = statement->body->find_first_of<ir::statement::if_statement>();
 					if (if_statement.has_value()) {
+						if (auto binary_condition = if_statement->get().condition->as<ir::expression::binary_expression>()) {
+							if (binary_condition->right->to_string() == "0") {
+								if (auto bit_call = binary_condition->left->as<ir::expression::function_call>()) {
+									if (bit_call->name.has_value() && bit_call->name.value()->to_string() == "get_bits" && bit_call->arguments.at(0)->body.size() == 3) {
+										// todo check parameters (UNK, 1, 1)? useless prob
+										object.deserializer_ctx->chunk_order.push_back(deserializer::process_order::instructions);
+									}
+								}
+							}
+						}
 					}
 				}
 			}
 
 			return false;
 		}
+	private:
+		//std::unordered_map<std::string, std::size_t> concerte_values; // mapping for resolved concerte values
+		//std::stack<std::size_t> execution_track; // keeps tracks of concerte values like assigns etc
+		//std::unique_ptr<vm_arch::proto> current_chunk; // current write chunk
+		symoblic_deserializer& const object; // holds a reference to deserializer object
+	};
 }
