@@ -154,4 +154,46 @@ namespace deobf::ast::ir::expression {
 
 		return children_vector;
 	}
+
+	void table::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			for (auto& [key, value] : entries) {
+				key->accept(visitor);
+				value->accept(visitor);
+			}
+		}
+	}
+
+	// nameAndArg? expression
+
+	std::string name_and_args::to_string() const
+	{
+		std::ostringstream stream;
+
+		if (!body.empty()) {
+			if (body.size() > 1)
+				std::transform(body.cbegin(), body.cend() - 1, std::ostream_iterator<std::string>(stream, ","), [&stream](const auto& value) {
+					return value->to_string();
+				});
+
+			stream << body.back()->to_string();
+		}
+
+		return name + stream.str();
+	}
+
+	bool name_and_args::equals(const node* other_node) const {
+		return false;
+	}
+
+	void name_and_args::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			for (auto& argument : body)
+				argument->accept(visitor);
+		}
+	}
+
+	std::vector<std::shared_ptr<node>> name_and_args::get_children() const {
+		return { };
+	}
 }
