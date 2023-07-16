@@ -16,6 +16,29 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter::proto_translator {
 			for (auto& proto : chunk->protos)
 				new_proto->protos.emplace_back(translate_chunk(proto.get()));
 
+		// convert line info
+		new_proto->line_info.reserve(chunk->instructions.size());
+		for (auto& instruction : chunk->instructions)
+			new_proto->line_info.push_back(instruction->line_defined);
+
+		// convert constants
+		new_proto->constants.reserve(chunk->constants.size());
+		for (auto& constant : chunk->constants) {
+			std::cout << "KSS:" << constant->to_string() << std::endl;
+			new_proto->constants.emplace_back(constant);
+		}
+
+		// convert code
+		new_proto->code.reserve(chunk->instructions.size()); // we aren't creating any new instructions during transpilation
+		for (auto pc = 0ul; pc < chunk->instructions.size(); ++pc) {
+			chunk->instructions.at(pc)->print();
+
+			auto new_instruction = instruction_translator::convert_instruction(chunk->instructions.at(pc).get(), pc);
+
+			std::cout << static_cast<int>(new_instruction->opcode) << std::endl;
+			new_proto->code.emplace_back(std::move(new_instruction));
+		}
+
 		return std::move(new_proto);
 	}
 }
