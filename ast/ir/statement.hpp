@@ -197,5 +197,35 @@ namespace deobf::ast::ir {
             std::unordered_map<std::string, std::unique_ptr<symbol_info>> symbol_table;
         };
 
+        struct do_block final : public statement {
+            std::shared_ptr<block> body;
+
+            std::string to_string() const override {
+                return "do " + body->to_string() + " end";
+            }
+
+            [[nodiscard]] bool equals(const node* other_node) const override;
+
+            std::vector<std::shared_ptr<node>> get_children() const override;
+
+            explicit do_block(std::shared_ptr<block> body) :
+                body(std::move(body))
+            { };
+
+            void accept(abstract_visitor_pattern* visitor) override;
+        };
+
+        struct break_statement final : public statement {
+
+            std::string to_string() const override {
+                return "break";
+            }
+
+            [[nodiscard]] bool equals(const node* other_node) const override {
+                return dynamic_cast<const break_statement*>(other_node) != nullptr;
+            }
+
+            void accept(abstract_visitor_pattern* visitor) override;
+        };
     }
 }
