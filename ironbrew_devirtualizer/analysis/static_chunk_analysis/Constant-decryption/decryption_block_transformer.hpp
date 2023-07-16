@@ -14,6 +14,17 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis {
 
 			const std::string decrypted_constant; // decrypted string
 			const std::int32_t parameter_reference;
+			
+			//basic_block *begin, *end;
+			//vm_arch::proto* owner = nullptr;
+
+			// [begin, end] pair of captured encryption basic blocks
+			std::weak_ptr<basic_block> begin, end;
+			static_chunk_analysis& analyzer;
+
+			//std::vector<std::unique_ptr<constant>>& constants;
+
+			//decryption_block_transformer(decryption_block_transformer&&) = default; // only push to queue.
 		public:
 
 			bool optimize(); // performs dead code elimination and linking begin to end

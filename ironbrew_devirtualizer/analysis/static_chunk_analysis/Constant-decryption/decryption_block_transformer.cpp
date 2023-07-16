@@ -47,6 +47,39 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis::constant_decrypt
 			current_instruction.get().flags |= instruction::instruction_mark_flag::to_collect;
 		}
 
+		// flag all ranging instructions ranging from [begin_block, final_block] as collectable
+		{
+			std::weak_ptr<vm_arch::basic_block> current_block{ begin_block->next_block };
+			while (!current_block.expired()) {
+				auto result_block = current_block.lock();
+				if (result_block == final_block)
+					break;
+
+				for (auto& instruction : result_block->instructions) {
+					instruction.get().flags |= instruction::instruction_mark_flag::to_collect;
+				}
+
+				current_block = result_block->next_block;
+			}
+		}
+
+		// add special IR instruction as bblock leader for later optimizations
+		{
+			auto result = new vm_arch::instruction{ vm_arch::opcode::op_decryptedkstflag };
+
+			result->type = vm_arch::instruction_type::abx;
+			result->a = final_block->instructions.at(0).get().a;
+			result->bx = parameter_reference;
+			result->is_kb = true;
+			
+			begin_block->instructions.emplace_back(*result);
+		}
+
+		// todo propagate bblocks?
+		begin_block->next_block = final_block->target_block;
+
+		analyzer.remove_dead_constants();
+
 		return true;
 	}
 }
