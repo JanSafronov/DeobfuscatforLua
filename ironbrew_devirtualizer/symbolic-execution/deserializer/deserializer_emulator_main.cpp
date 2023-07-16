@@ -78,9 +78,45 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
                                     break;
                                 }
                             }
+                            
+                            const auto is_ka = deserializer_helper_object->get_bits(instruction_bitfield_2, 1); // on mutated ops such eq/lt/le
+                            const auto is_kb = deserializer_helper_object->get_bits(instruction_bitfield_2, 2);
+                            const auto is_kc = deserializer_helper_object->get_bits(instruction_bitfield_2, 3);
 
+                            new_instruction->is_ka = is_ka;
+                            new_instruction->is_kb = is_kb;
+                            new_instruction->is_kc = is_kc;
+
+                            proto->instructions.push_back(std::move(new_instruction));
                         }
                     }
+                    break;
+                }
+                case deserializer_enums::process_order::lineinfo: { // todo fix
+                    //const auto lineinfo_max_size = deserializer_helper_object->get_bits<std::int32_t>();
+                    //for (auto i = 0l; i < lineinfo_max_size; ++i) {
+                    //    proto->instructions.at(i)->line_defined = deserializer_helper_object->get_bits<std::int32_t>(); //proto->lineinfo.push_back(deserializer_helper_object->get_bits<std::int32_t>());
+                    //}
+
+                    const auto lineinfo_max_size = deserializer_helper_object->get_bits<std::int32_t>();
+                    for (auto i = 0ul; i < lineinfo_max_size; ++i) {
+                        const auto line_defined = deserializer_helper_object->get_bits<std::int32_t>();
+
+                        proto->lineinfo.push_back(line_defined);
+                    }
+
+                    break;
+                }
+                case deserializer_enums::process_order::protos: {
+                    const auto proto_max_size = deserializer_helper_object->get_bits<std::int32_t>();
+                    for (auto i = 0l; i < proto_max_size; ++i) {
+                        proto->protos.emplace_back(deserialize());
+                    }
+
+                    break;
+                }
+                case deserializer_enums::process_order::parameters: {
+                    proto->num_params = deserializer_helper_object->get_bits<std::int8_t>();
                     break;
                 }
             }
