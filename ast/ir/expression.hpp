@@ -315,4 +315,41 @@ namespace deobf::ast::ir::expression {
 
         void accept(abstract_visitor_pattern* visitor) override;
     };
+
+    struct function final : public expression_t { // a function prototype. (in statements because defining a function can be both)
+        std::optional<std::string> function_name; // optional since a function could be anonymous on a variable list, we can use the has_value method.
+        
+        //std::string static_symbol;
+
+        ir::expression::name_list_t parameters{ };
+        std::shared_ptr<ir::statement::block> body;
+
+        std::string to_string() const override;
+
+        [[nodiscard]] bool equals(const node* other_node) const override;
+
+        std::vector<std::shared_ptr<node>> get_children() const override;
+
+        enum class function_type {
+            anonymous_t, // passed on varlist for example, in roblox : signal:Connect(function(...) end)
+            variable_t, // local x = function() end
+            local_t,
+            global_t,
+        } type;
+
+        explicit function(function_type type, ir::expression::name_list_t parameters, std::shared_ptr<ir::statement::block> body, const std::string& name) :
+            type(type),
+            parameters(std::move(parameters)),
+            body(std::move(body)),
+            function_name(name)
+        { };
+
+        explicit function(function_type type, ir::expression::name_list_t parameters, std::shared_ptr<ir::statement::block> body) :
+            type(type),
+            parameters(std::move(parameters)),
+            body(std::move(body))
+        { };
+
+        void accept(abstract_visitor_pattern* visitor) override;
+    };
 }
