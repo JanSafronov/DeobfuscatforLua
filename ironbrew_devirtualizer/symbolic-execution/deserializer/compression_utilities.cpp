@@ -39,4 +39,24 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
 
         return result.str();
     }
+
+    const std::string compression_utilities::unescape_vm_string(std::string_view vm_string) {
+        std::stringstream unescaped;
+
+        //unescaped.fill('0');
+
+        std::string current_character;
+        for (auto iterator = vm_string.cbegin() + 1; iterator != vm_string.cend(); ++iterator) {
+            auto& character = (*iterator);
+            if (character == '\\') {
+                unescaped << static_cast<unsigned char>(std::stol(current_character));
+                current_character.clear();
+            }
+            else {
+                current_character += character;
+            }
+        }
+
+        return unescaped.str();
+    }
 }
