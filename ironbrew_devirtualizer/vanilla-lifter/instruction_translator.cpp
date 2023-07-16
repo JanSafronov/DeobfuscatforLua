@@ -3,7 +3,9 @@
 namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 	std::unique_ptr<vm_arch::vanilla_instruction> instruction_translator::convert_instruction(vm_arch::instruction* original_instruction, std::uint32_t pc) {
 		auto new_instruction = std::make_unique<vm_arch::vanilla_instruction>();
-
+		
+		//if (original_instruction->op == vm_arch::opcode::op_invalid)
+		//	throw std::runtime_error("invalid opcode");
 
 		auto new_opcode = read_single_data_opcode_to_vanilla(original_instruction->op);
 
@@ -17,6 +19,16 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
 				new_instruction->b = original_instruction->b;
 				new_instruction->c = original_instruction->c;
+				break;
+			}
+			case vm_arch::instruction_type::abx: { // SET ARG BX
+				new_instruction->type = vm_arch::vanilla_instruction_type::abx;
+				new_instruction->bx = original_instruction->bx;
+				break;
+			}
+			case vm_arch::instruction_type::asbx: { // SET ARG SBX
+				new_instruction->type = vm_arch::vanilla_instruction_type::asbx;
+				new_instruction->sbx = original_instruction->sbx;
 				break;
 			}
 			case vm_arch::instruction_type::asbxc: { // AC & SBX, SET ARG SBX & SET ARG C (WILL BE DISCARDED LATER)
