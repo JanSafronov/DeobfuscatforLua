@@ -407,4 +407,29 @@ namespace deobf::vm_arch {
 		// ironbrew deobfuscator special set
 		{ opcode::op_decryptedkstflag, "decryptedkstflag" }
 	};
+
+	enum class instruction_mode {
+		a, // 8 bits
+		b, // 9 bits
+		c, // 9 bits
+		bx, // 18 bits (b+c)
+		sbx, // signed bx
+	};
+	
+	enum class vanilla_instruction_type {
+		a,
+		ab,
+		ac,
+		abc,
+		sbx,
+		abx,
+		asbx,
+	};
+
+	enum class instruction_type {
+		abc,
+		abx,
+		asbx,
+		asbxc,
+	};
 }
