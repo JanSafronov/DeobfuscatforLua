@@ -232,4 +232,42 @@ namespace deobf::ast::ir::expression {
 				argument->accept(visitor);
 		}
 	}
+
+	// variable expression
+
+	std::string variable::to_string() const {
+		std::ostringstream stream;
+
+		if (name->is<ir::expression::string_literal>())
+			stream << static_cast<ir::expression::string_literal*>(name.get())->value;
+		else
+			stream << '(' << name->to_string() << ')';
+
+		for (auto& suffix : suffixes) // wouldve used stream iterator but we would need a custom type
+			stream << suffix->to_string();
+
+		return stream.str();
+	}
+
+	bool variable::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::vector<std::shared_ptr<node>> variable::get_children() const {
+		auto children_vector = std::vector<std::shared_ptr<node>>{ };
+
+		children_vector.emplace_back(name);
+		
+		std::copy(suffixes.begin(), suffixes.end(), std::back_inserter(children_vector));
+
+		return children_vector;
+	}
+
+	void variable::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			name->accept(visitor);
+			for (const auto& suffix : suffixes)
+				suffix->accept(visitor);
+		}
+	}
 }
