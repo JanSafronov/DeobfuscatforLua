@@ -34,4 +34,48 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::vm {
 
 		- Space complexity is O(1) in both cases.
 	*/
+
+	//template <typename handler_t>
+	struct opcode_handler_computer final : ir::abstract_visitor_pattern {
+		std::function<vm_arch::opcode(vm_arch::instruction&, ir::statement::block*)> callback_functor;
+		std::deque<std::reference_wrapper<vm_arch::instruction>> back_track;
+		
+		mutable std::recursive_mutex handler_mutex;
+
+		// opcode handler routine
+		void handle(vm_arch::instruction&, ir::statement::block*);
+
+		// visitor
+		bool accept(ir::expression::binary_expression* expression) override;
+		bool accept(ir::statement::block* body) override;
+		bool accept(ir::statement::if_statement* if_stat) override;
+		
+		
+		/*template <typename callback_t>
+		void set_callback(callback_t&& callback) {
+			callback_functor = std::move(callback);
+		}*/
+
+		void run_cycle() {
+			//std::cout << "running.\n";
+			//handler_mutex.lock();
+			root->accept(this);
+			//handler_mutex.unlock();
+		}
+
+		explicit opcode_handler_computer(ir::statement::if_statement* const root, std::deque<std::reference_wrapper<vm_arch::instruction>>& back_track) :
+			root(root),
+			back_track(std::move(back_track))
+		{ }
+
+		explicit opcode_handler_computer(ir::statement::if_statement* const root) :
+			root(root)
+		{ }
+
+		std::map<std::uint8_t, std::vector<vm_arch::opcode>> memoized_virtuals{ };
+	private:
+
+		//static decltype(callback_functor) callback_handler;
+		ir::statement::if_statement* const root;
+	};
 }
