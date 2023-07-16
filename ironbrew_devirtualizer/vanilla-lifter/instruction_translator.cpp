@@ -262,6 +262,84 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 				break;
 			}
 
+			case vm_arch::opcode::op_ne: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+				break;
+			}
+			case vm_arch::opcode::op_ne1: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+
+				new_instruction->b += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_ne2: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+
+				new_instruction->c += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_ne3: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+
+				new_instruction->b += 0xff;
+				new_instruction->c += 0xff;
+				break;
+			}
+
+			case vm_arch::opcode::op_lt: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+				break;
+			}
+			case vm_arch::opcode::op_lt1: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+
+				new_instruction->b += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_lt2: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+
+				new_instruction->c += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_lt3: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+
+				new_instruction->b += 0xff;
+				new_instruction->c += 0xff;
+				break;
+			}
 		}
 
 		return std::move(new_instruction);
