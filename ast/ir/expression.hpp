@@ -190,4 +190,89 @@ namespace deobf::ast::ir::expression {
 
         void accept(abstract_visitor_pattern* visitor) final override;
     };
+
+    using name_list_t = std::vector<std::shared_ptr<string_literal>>; // we don't need to handle varargs, since antlr counts them as terminal symbols so we can push into our name list.
+
+    struct binary_expression final : public expression {
+        enum class operation_t { // todo luau operations ?
+            // not a operation
+            none,
+
+            // basic math operations
+            add, // +
+            sub, // -
+            div, // /
+            mul, // *
+            mod, // %
+            pow, // ^ ( not xor )
+
+            // string manip operations
+            concat, // ..
+
+            // comparison operations
+            gt, // >
+            lt, // <
+            ge, // >=
+            le, // <=
+            eq, // ==
+            neq, // ~=
+
+            // logical operations
+            and,
+            or ,
+        } operation;
+
+        static const std::unordered_map<operation_t, std::string> operation_map;
+
+        std::shared_ptr<expression> left, right; // bin LHS, RHS
+
+        [[nodiscard]] auto is_communicative_op() const noexcept {
+            return operation == operation_t::add || operation == operation_t::mul;
+        }
+
+        std::string to_string() const override;
+
+        [[nodiscard]] bool equals(const node* other_node) const override {
+            if (auto result = dynamic_cast<const binary_expression*>(other_node))
+                return std::tie(operation, left, right) == std::tie(result->operation, result->left, result->right);
+
+            return false;
+        }
+
+        std::vector<std::shared_ptr<node>> get_children() const override;
+
+        // polish notation constructor
+        explicit binary_expression(operation_t operation, std::shared_ptr<expression> left, std::shared_ptr<expression> right) : operation(operation),
+            left(std::move(left)),
+            right(std::move(right))
+        { }
+
+        void accept(abstract_visitor_pattern* visitor) override;
+    };
+
+    struct unary_expression final : public expression {
+        enum class operation_t { // using unary_expr = std::variant<std::monostate, not, len, minus>
+            none, // not a operation
+            not,
+            len,
+            minus,
+        } operation;
+
+        static const std::unordered_map<operation_t, std::string> operation_map;
+
+        std::shared_ptr<expression> body;
+
+        std::string to_string() const override;
+
+        [[nodiscard]] bool equals(const node* other_node) const override;
+
+        std::vector<std::shared_ptr<node>> get_children() const override;
+
+        explicit unary_expression(operation_t operation, std::shared_ptr<expression> body) :
+            operation(operation),
+            body(std::move(body))
+        { }
+
+        void accept(abstract_visitor_pattern* visitor) override;
+    };
 }
