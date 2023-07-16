@@ -252,4 +252,159 @@ namespace deobf::vm_arch {
 		op_closure,
 		op_vararg,
 	};
+
+	static inline std::unordered_map<vm_arch::opcode, std::string_view> opcode_map{
+		{ opcode::op_invalid, "invalid" },
+
+		{ opcode::op_move, "move" },
+		{ opcode::op_loadk, "loadk" },
+		
+		{ opcode::op_loadbool, "loadbool" },
+		{ opcode::op_loadbool1, "loadbool1" },
+
+		{ opcode::op_loadnil, "loadnil" },
+		{ opcode::op_getupval, "getupval" },
+		{ opcode::op_getglobal, "getglobal" },
+		
+		{ opcode::op_gettable, "gettable" },
+		{ opcode::op_gettable1, "gettable1" },
+
+		{ opcode::op_setglobal, "setglobal" },
+		{ opcode::op_setupval, "setupval" },
+		
+		{ opcode::op_settable, "settable" },
+		{ opcode::op_settable1, "settable1" },
+		{ opcode::op_settable2, "settable2" },
+		{ opcode::op_settable3, "settable3" },
+
+		{ opcode::op_newtable, "newtable" },
+		
+		{ opcode::op_self, "self" },
+		{ opcode::op_self1, "self1" },
+
+		{ opcode::op_add, "add" },
+		{ opcode::op_add1, "add1" },
+{ opcode::op_add2, "add2" },
+{ opcode::op_add3, "add3" },
+
+		{ opcode::op_sub, "sub" },
+		{ opcode::op_sub1, "sub1" },
+		{ opcode::op_sub2, "sub2" },
+		{ opcode::op_sub3, "sub3" },
+
+		{ opcode::op_mul, "mul" },
+		{ opcode::op_mul1, "mul1" },
+		{ opcode::op_mul2, "mul2" },
+		{ opcode::op_mul3, "mul3" },
+
+		{ opcode::op_div, "div" },
+		{ opcode::op_div1, "div1" },
+		{ opcode::op_div2, "div2" },
+		{ opcode::op_div3, "div3" },
+
+		{ opcode::op_mod, "mod" },
+		{ opcode::op_mod1, "mod1" },
+		{ opcode::op_mod2, "mod2" },
+		{ opcode::op_mod3, "mod3" },
+
+		{ opcode::op_pow, "pow" },
+		{ opcode::op_pow1, "pow1" },
+		{ opcode::op_pow2, "pow2" },
+		{ opcode::op_pow3, "pow3" },
+
+		{ opcode::op_unm, "unm" },
+		{ opcode::op_not, "not" },
+		{ opcode::op_len, "len" },
+		{ opcode::op_concat, "concat" },
+		{ opcode::op_jmp, "jmp" },
+
+		{ opcode::op_eq, "eq" },
+		{ opcode::op_eq1, "eq1" },
+		{ opcode::op_eq2, "eq2" },
+		{ opcode::op_eq3, "eq3" },
+
+		{ opcode::op_lt, "lt" },
+		{ opcode::op_lt1, "lt1" },
+		{ opcode::op_lt2, "lt2" },
+		{ opcode::op_lt3, "lt3" },
+
+		{ opcode::op_le, "le" },
+		{ opcode::op_le1, "le1" },
+		{ opcode::op_le2, "le2" },
+		{ opcode::op_le3, "le3" },
+
+
+		{ opcode::op_ne, "ne" },
+		{ opcode::op_ne1, "ne1" },
+		{ opcode::op_ne2, "ne2" },
+		{ opcode::op_ne3, "ne3" },
+
+
+		{ opcode::op_gt, "gt" },
+		{ opcode::op_gt1, "gt1" },
+		{ opcode::op_gt2, "gt2" },
+		{ opcode::op_gt3, "gt3" },
+
+
+		{ opcode::op_ge, "ge" },
+		{ opcode::op_ge1, "ge1" },
+		{ opcode::op_ge2, "ge2" },
+		{ opcode::op_ge3, "ge3" },
+
+		{ opcode::op_test, "test" },
+		{ opcode::op_test1, "test1" },
+
+		{ opcode::op_testset, "testset" },
+		{ opcode::op_testset1, "testset1" },
+
+		{ opcode::op_call, "call" },
+		{ opcode::op_call1, "call1" },
+		{ opcode::op_call2, "call2" },
+		{ opcode::op_call3, "call3" },
+		{ opcode::op_call4, "call4" },
+		{ opcode::op_call5, "call5" },
+		{ opcode::op_call6, "call6" },
+		{ opcode::op_call7, "call7" },
+		{ opcode::op_call8, "call8" },
+		{ opcode::op_call9, "call9" },
+		{ opcode::op_call10, "call10" },
+		{ opcode::op_call11, "call11" },
+		{ opcode::op_call12, "call12" },
+		{ opcode::op_call13, "call13" },
+		{ opcode::op_call14, "call14" },
+		{ opcode::op_call15, "call15" },
+
+		{ opcode::op_tailcall, "tailcall" },
+		{ opcode::op_tailcall1, "tailcall1" },
+		{ opcode::op_tailcall2, "tailcall2" },
+
+		{ opcode::op_return, "return" },
+		{ opcode::op_return1, "return1" },
+		{ opcode::op_return2, "return2" },
+		{ opcode::op_return3, "return3" },
+		{ opcode::op_return4, "return4" },
+
+		{ opcode::op_forloop, "forloop" },
+		{ opcode::op_forprep, "forprep" },
+		{ opcode::op_tforloop, "tforloop" },
+		
+		{ opcode::op_setlist, "setlist" },
+		{ opcode::op_setlist1, "setlist1" },
+		{ opcode::op_setlist2, "setlist2" },
+
+		{ opcode::op_close, "close" },
+		
+		{ opcode::op_closure, "closure" },
+		{ opcode::op_closure1, "closure1" },
+
+		{ opcode::op_vararg, "vararg" },
+		{ opcode::op_vararg1, "vararg1" },
+
+		// custom vm opcodes
+		{ opcode::op_newstack, "newstack" },
+		{ opcode::op_settop, "settop" },
+
+		// ironbrew deobfuscator special set
+		{ opcode::op_decryptedkstflag, "decryptedkstflag" }
+	};
 }
