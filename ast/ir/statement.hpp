@@ -262,5 +262,43 @@ namespace deobf::ast::ir {
 
             void accept(abstract_visitor_pattern* visitor) override;
         };
+
+        struct local_declaration final : public statement { // i.e. local a, b, c = 1, 2, 3 (not really a decl but standard calls it.)
+            //std::string static_symbol;
+
+            ir::expression::name_list_t names{ };
+            ir::expression::expression_list_t body{ };
+
+            std::string to_string() const override;
+
+            [[nodiscard]] bool equals(const node* other_node) const override;
+
+            std::vector<std::shared_ptr<node>> get_children() const override;
+
+            explicit local_declaration(ir::expression::name_list_t names, ir::expression::expression_list_t body) :
+                names(std::move(names)),
+                body(std::move(body))
+            { };
+
+            void accept(abstract_visitor_pattern* visitor) override;
+        };
+
+        struct variable_assign final : public statement { // (variables) = (expressions)
+            ir::expression::variable_list_t variables{ };
+            ir::expression::expression_list_t expressions{ }; // shouldv'e named it body?
+
+            std::string to_string() const override;
+
+            [[nodiscard]] bool equals(const node* other_node) const override;
+
+            std::vector<std::shared_ptr<node>> get_children() const override;
+
+            explicit variable_assign(ir::expression::variable_list_t variables, ir::expression::expression_list_t expressions) :
+                variables(std::move(variables)),
+                expressions(std::move(expressions))
+            { }
+
+            void accept(abstract_visitor_pattern* visitor) override;
+        };
     }
 }
