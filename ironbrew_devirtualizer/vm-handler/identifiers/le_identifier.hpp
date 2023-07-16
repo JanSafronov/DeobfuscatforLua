@@ -13,6 +13,24 @@ namespace deobf::ironbrew_devirtualizer::vm_handler_identifiers {
 					if (if_stat->body->body.size() != 1) {
 						return __super::handle(path);
 					}
+
+					bool is_gt = (if_stat->body->body.at(0)->to_string() != "instruction_pointer = instruction_opcode_b");
+
+					if (expression_string == "( instruction_opcode_a <= instruction_opcode_c )") {
+						return is_gt ? vm_arch::opcode::op_gt3 : vm_arch::opcode::op_le3;
+					}
+
+					if (expression_string == "( stack[instruction_opcode_a] <= instruction_opcode_c )") {
+						return is_gt ? vm_arch::opcode::op_gt2 : vm_arch::opcode::op_le2;
+					}
+
+					if (expression_string == "( instruction_opcode_a <= stack[instruction_opcode_c] )") {
+						return is_gt ? vm_arch::opcode::op_gt1 : vm_arch::opcode::op_le1;
+					}
+
+					if (expression_string == "( stack[instruction_opcode_a] <= stack[instruction_opcode_c] )") {
+						return is_gt ? vm_arch::opcode::op_gt : vm_arch::opcode::op_le;
+					}
 				}
 			}
 
