@@ -85,6 +85,16 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
 					}
 				}
 			}
+			else if (end_string == "get_32_bits()") {
+				if (statement->body->body.size() == 1) {
+					auto assign = statement->body->find_first_of<ir::statement::variable_assign>();
+					if (assign.has_value()) {
+						const auto& assign_statement = assign->get();
+						if (assign_statement.expressions.size() == 1) {
+						}
+					}
+				}
+			}
 
 			return false;
 		}
