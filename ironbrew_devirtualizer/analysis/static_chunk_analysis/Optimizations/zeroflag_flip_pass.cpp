@@ -42,6 +42,58 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis::optimizations::z
 				case vm_arch::opcode::op_testset:
 
 				case vm_arch::opcode::op_test1:
+				case vm_arch::opcode::op_testset1: {
+					// todo might fuck up with while loops with no body, check jump dests
+					auto& next_block = current_block->next_block;
+					auto& target_block = current_block->target_block;
+
+					if (!next_block->instructions.size() == 1) {
+						break;
+					}
+
+					if (!target_block->instructions.size() == 1) {
+						/*auto is_preserved_sub = (target_block->instructions.size() == 3 && target_block->instructions.at(0).get().op == vm_arch::opcode::op_move && target_block->instructions.at(1).get().op == vm_arch::opcode::op_loadbool);
+
+						if (!is_preserved_sub) {
+							break;
+						}*/
+						break;
+					}
+
+					if (next_block->instructions.back().get().op != vm_arch::opcode::op_jmp)
+						break;
+
+					if (target_block->instructions.back().get().op != vm_arch::opcode::op_jmp)
+						break;
+
+					if (next_block->target_block != target_block->next_block)
+						break;
+
+					if (target_block->target_block.get() == current_block)
+						break;
+
+					last_instruction.get().print();
+					
+					auto new_operator = aux::get_inverse_kst_optimized_logic_opcode(last_opcode);
+					
+					last_instruction.get().op = new_operator;
+
+					last_instruction.get().print();
+
+					{
+						const auto old_next = current_block->next_block;
+
+						current_block->next_block = current_block->target_block;
+
+						current_block->target_block = old_next->target_block;
+
+						//std::cout << old_next.use_count() << std::endl;
+					}
+					++num_optimizations;
+					
+
+					continue;
+				}
 			}
 
 			for (auto& insn : current_block->instructions) {
