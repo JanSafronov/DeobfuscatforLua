@@ -12,6 +12,10 @@ namespace deobf::ironbrew_devirtualizer::vm_handler_identifiers {
 				auto& body_wrapper = do_statement->get();
 				std::cout << "dostat\n";
 				if (body_wrapper.body->body.size() == 0) {
+					auto call_statement = body_wrapper.find_first_of<ir::expression::function_call>();
+					if (call_statement.has_value()) {
+						auto& call_wrapper = call_statement->get();						
+					}
 				}
 			}
 
