@@ -12,6 +12,15 @@ namespace deobf::ironbrew_devirtualizer::vm_handler_identifiers {
 				if (assign_string == "stack[instruction_opcode_a] = ( instruction_opcode_b % instruction_opcode_c )") {
 					return vm_arch::opcode::op_mod3;
 				}
+				else if (assign_string == "stack[instruction_opcode_a] = ( stack[instruction_opcode_b] % instruction_opcode_c )") {
+					return vm_arch::opcode::op_mod2;
+				}
+				else if (assign_string == "stack[instruction_opcode_a] = ( instruction_opcode_b % stack[instruction_opcode_c] )") {
+					return vm_arch::opcode::op_mod1;
+				}
+				else if (assign_string == "stack[instruction_opcode_a] = ( stack[instruction_opcode_b] % stack[instruction_opcode_c] )") {
+					return vm_arch::opcode::op_mod;
+				}
 			}
 
 			return __super::handle(path);
