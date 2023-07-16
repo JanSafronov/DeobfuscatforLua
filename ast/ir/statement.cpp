@@ -240,4 +240,59 @@ namespace deobf::ast::ir::statement {
 
 		return children_vector;
 	}
+
+	void for_step::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			init->accept(visitor);
+			end->accept(visitor);
+
+			if (step.has_value())
+				step.value()->accept(visitor);
+
+			body->accept(visitor);
+		}
+	}
+
+	// for in
+
+	bool for_in::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::string for_in::to_string() const {
+		std::ostringstream stream;
+		
+		stream << "for ";
+
+		if (!names.empty()) {
+			std::transform(names.cbegin(), names.cend() - 1, std::ostream_iterator<std::string>(stream, ","), [&stream](const auto& value) {
+				return value->to_string();
+			});
+
+			stream << names.back()->to_string();
+		}
+
+		if (!expressions.empty()) {
+			stream << " in ";
+
+			std::transform(expressions.cbegin(), expressions.cend() - 1, std::ostream_iterator<std::string>(stream, ","), [&stream](const auto& value) {
+				return value->to_string();
+			});
+
+			stream << expressions.back()->to_string();
+		}
+
+		return stream.str();
+	}
+
+	std::vector<std::shared_ptr<node>> for_in::get_children() const {
+		auto children_vector = std::vector<std::shared_ptr<node>>{ };
+
+		std::copy(names.begin(), names.end(), std::back_inserter(children_vector));
+		std::copy(expressions.begin(), expressions.end(), std::back_inserter(children_vector));
+
+		children_vector.push_back(body);
+
+		return children_vector;
+	}
 }
