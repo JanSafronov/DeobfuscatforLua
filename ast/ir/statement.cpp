@@ -85,4 +85,60 @@ namespace deobf::ast::ir::statement {
 	std::vector<std::shared_ptr<node>> do_block::get_children() const {
 		return { body };
 	}
+
+	void do_block::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this))
+			body->accept(visitor);
+	}
+
+	// while statement
+
+	std::string while_statement::to_string() const {
+		return "while " + condition->to_string() + " do";
+	}
+
+	bool while_statement::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::vector<std::shared_ptr<node>> while_statement::get_children() const {
+		return { body, condition };
+	}
+
+	void while_statement::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			condition->accept(visitor);
+			body->accept(visitor);
+		}
+	}
+
+	// local declare
+
+	std::string local_declaration::to_string() const {
+		std::ostringstream stream;
+
+		stream << "local ";
+
+		if (!names.empty()) {
+			std::transform(names.cbegin(), names.cend() - 1, std::ostream_iterator<std::string>(stream, ","), [&stream](const auto& value) {
+				return value->to_string();
+			});
+
+			stream << names.back()->to_string();
+		}
+
+		
+		if (!body.empty()) {
+			stream << " = ";
+
+			std::transform(body.cbegin(), body.cend() - 1, std::ostream_iterator<std::string>(stream, ","), [&stream](const auto& value) {
+				return value->to_string();
+			});
+
+			stream << body.back()->to_string();
+		}
+		
+
+		return stream.str();
+	}
 }
