@@ -295,4 +295,32 @@ namespace deobf::ast::ir::statement {
 
 		return children_vector;
 	}
+
+	void for_in::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			for (auto& name : names)
+				name->accept(visitor);
+
+			for (auto& expression : expressions)
+				expression->accept(visitor);
+
+			body->accept(visitor);
+		}
+	}
+	// repeat
+
+	bool repeat::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::vector<std::shared_ptr<node>> repeat::get_children() const {
+		return { body, condition };
+	}
+
+	void repeat::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			condition->accept(visitor);
+			body->accept(visitor);
+		}
+	}
 }
