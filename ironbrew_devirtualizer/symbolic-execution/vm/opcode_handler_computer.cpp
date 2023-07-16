@@ -86,4 +86,30 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::vm {
 		return false;
 	}
 
+	bool opcode_handler_computer::accept(ir::statement::if_statement* if_stat) {
+		const auto root_condition = static_cast<ir::expression::binary_expression*>(if_stat->condition.get());
+
+		if (accept(root_condition)) {
+			if_stat->body->accept(this);
+			return false;
+		}
+
+		for (const auto& [condition, body] : if_stat->else_if_statements) {
+			const auto binary_condition = static_cast<ir::expression::binary_expression*>(condition.get());
+			if (accept(binary_condition)) {
+				body->accept(this);
+				return false;
+			}
+		}
+
+		if (if_stat->else_body.has_value()) {
+			if (accept(if_stat->else_body.value().get())) {
+				if_stat->body->accept(this);
+				return false;
+			}
+		}
+
+		return false;
+	}
+
 }
