@@ -71,4 +71,92 @@ namespace deobf::vm_arch::aux {
         { vm_arch::opcode::op_ne2, vm_arch::opcode::op_ne },
         { vm_arch::opcode::op_ne3, vm_arch::opcode::op_ne },
     };
+
+    vm_arch::opcode get_kst_optimized_logic_opcode(vm_arch::opcode original, bool is_kb, bool is_kc) {
+        // or could mask op with is_ka AND is_kc, unfortunately this is a bad idea since we need those opcodes for other stuff
+        switch (original) {
+            case vm_arch::opcode::op_lt: {
+                if (is_kb && is_kc) {
+                    return vm_arch::opcode::op_lt3;
+                }
+                else if (is_kc) {
+                    return vm_arch::opcode::op_lt2;
+                }
+                else if (is_kb) {
+                    return vm_arch::opcode::op_lt1;
+                }
+
+                break;
+            }
+            case vm_arch::opcode::op_ge: {
+                if (is_kb && is_kc) {
+                    return vm_arch::opcode::op_ge3;
+                }
+                else if (is_kc) {
+                    return vm_arch::opcode::op_ge2;
+                }
+                else if (is_kb) {
+                    return vm_arch::opcode::op_ge1;
+                }
+
+                break;
+            }
+
+            case vm_arch::opcode::op_le: {
+                if (is_kb && is_kc) {
+                    return vm_arch::opcode::op_le3;
+                }
+                else if (is_kc) {
+                    return vm_arch::opcode::op_le2;
+                }
+                else if (is_kb) {
+                    return vm_arch::opcode::op_le1;
+                }
+
+                break;
+            }
+            case vm_arch::opcode::op_gt: {
+                if (is_kb && is_kc) {
+                    return vm_arch::opcode::op_gt3;
+                }
+                else if (is_kc) {
+                    return vm_arch::opcode::op_gt2;
+                }
+                else if (is_kb) {
+                    return vm_arch::opcode::op_gt1;
+                }
+
+                break;
+            }
+
+            case vm_arch::opcode::op_ne: {
+                if (is_kb && is_kc) {
+                    return vm_arch::opcode::op_ne3;
+                }
+                else if (is_kc) {
+                    return vm_arch::opcode::op_ne2;
+                }
+                else if (is_kb) {
+                    return vm_arch::opcode::op_ne1;
+                }
+
+                break;
+            }
+            case vm_arch::opcode::op_eq: {
+                if (is_kb && is_kc) {
+                    return vm_arch::opcode::op_eq3;
+                }
+                else if (is_kc) {
+                    return vm_arch::opcode::op_eq2;
+                }
+                else if (is_kb) {
+                    return vm_arch::opcode::op_eq1;
+                }
+
+                break;
+            }
+        }
+
+        return original;
+    }
 }
