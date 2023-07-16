@@ -31,6 +31,66 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis::optimizations::e
 
 				// iterate successors instead todo?
 				auto next_block = current_block->target_block;
+				if (next_block != nullptr) {
+
+					auto le_cmp = next_block->instructions.back();
+
+					// support for this bullshit
+					auto is_false_generated = (le_cmp.get().op == vm_arch::opcode::op_le || le_cmp.get().op == vm_arch::opcode::op_gt);
+
+					if (le_cmp.get().op != std::get<0>(new_opcode->second) && !is_false_generated) {
+						goto continue_search;
+					}
+					
+					auto next_jmp_block_1 = current_block->next_block;
+					auto next_jmp_block_2 = next_block->next_block;
+
+					if (!(next_jmp_block_1->instructions.size() == 1 && next_jmp_block_2->instructions.size() == 1)) {
+						goto continue_search;
+					}
+
+					if (next_jmp_block_1->instructions.at(0).get().op != vm_arch::opcode::op_jmp)
+						goto continue_search;
+
+					if (!(next_jmp_block_1->instructions.at(0).get() == next_jmp_block_2->instructions.at(0).get()))
+						goto continue_search;
+
+					if (le_cmp.get().a == r_a && le_cmp.get().c == r_c) {
+						auto& le_target_block = next_block->target_block;
+						le_target_block->instructions.at(0).get().print();
+
+
+						if (le_target_block->instructions.back().get().op != vm_arch::opcode::op_jmp) {
+							goto continue_search;
+						}
+
+
+						
+						// no need to modify parameters
+						last_instruction.get().op = std::get<1>(new_opcode->second);
+						
+						
+						if (is_false_generated) {
+							last_instruction.get().op = aux::get_inverse_kst_optimized_logic_opcode(std::get<1>(new_opcode->second));
+							current_block->next_block = next_block->next_block;
+							current_block->target_block = le_target_block;
+						}
+						else {
+							current_block->next_block = le_target_block;
+							current_block->target_block = le_target_block->next_block;
+						}
+
+						++num_optimizations;
+
+						std::cout << "bsflag:" << is_false_generated << std::endl;
+						last_instruction.get().print();
+						//next_block->next_block->instructions.back().get().print();
+						
+						std::cout << "DAMN\n";
+						//while (true) { }
+						//next_block->target_block->instructions.back().get().print();
+					}
+				}
 			}
 			continue_search:
 			current_block = current_block->next_block.get();
