@@ -227,5 +227,40 @@ namespace deobf::ast::ir {
 
             void accept(abstract_visitor_pattern* visitor) override;
         };
+
+        struct semicolon final : public statement {
+
+            std::string to_string() const override {
+                return ";";
+            }
+
+            [[nodiscard]] bool equals(const node* other_node) const override {
+                return dynamic_cast<const semicolon*>(other_node) != nullptr;
+            }
+
+            void accept(abstract_visitor_pattern* visitor) override;
+        };
+
+
+        struct while_statement final : public statement {
+            // WHILE condition DO body END
+
+
+            std::shared_ptr<expression_t> condition;
+            std::shared_ptr<block> body;
+
+            std::string to_string() const override;
+
+            [[nodiscard]] bool equals(const node* other_node) const override;
+
+            std::vector<std::shared_ptr<node>> get_children() const override;
+
+            explicit while_statement(std::shared_ptr<expression_t> condition, std::shared_ptr<block> body) :
+                body(std::move(body)),
+                condition(std::move(condition))
+            { }
+
+            void accept(abstract_visitor_pattern* visitor) override;
+        };
     }
 }
