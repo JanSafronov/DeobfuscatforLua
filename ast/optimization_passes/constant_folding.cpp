@@ -163,6 +163,58 @@ namespace deobf::ast::optimization_passes {
 
 			return true;
 		}
+
+		bool accept(ir::expression::binary_expression* expression) override {
+			return fold_basic_expression<ir::expression::binary_expression, ir::expression::unary_expression>(expression);
+		}
+
+		private:
+			// the following code is garbage and needs to be changed soon (works good but can be improved more)
+			template <class... ast_types>
+			using ast_node_variance = std::variant<std::monostate, std::shared_ptr<ast_types>...>;
+
+			template <typename ast_type, class fold_nodes_t>
+			constexpr bool check_variance_node(fold_nodes_t&& to_visit, std::shared_ptr<ir::expression::expression> expression) noexcept {
+				const auto result = expression->is<ast_type>();
+
+				if (result)
+					to_visit = std::static_pointer_cast<ast_type>(expression);
+
+				return result;
+			}
+
+			template <typename... ast_types>
+			constexpr bool fold_basic_expression(ir::expression::binary_expression* expression) {
+				static_assert((... && std::is_base_of_v<typename ir::expression::expression, ast_types>), "[optimization_passes/constant_folding/fold_basic_expression]: invalid varardic specialization for ast_types");
+
+				ast_node_variance<ast_types...> left, right;
+
+				if (!(check_variance_node<ast_types>(left, expression->left) || ...))
+					return false;
+
+				if (!(check_variance_node<ast_types>(right, expression->right) || ...))
+					return false;
+
+				std::visit([this, &expression](auto&& left_expression, auto&& right_expression) {
+					using left_expression_t = std::decay_t<decltype(left_expression)>;
+					using right_expression_t = std::decay_t<decltype(right_expression)>;
+
+					if constexpr (std::integral_constant<bool, (std::is_same_v<left_expression_t, std::shared_ptr<ast_types>> || ...)>{ }) {
+						left_expression->accept(this);
+						if (auto optimization_result = optimize(left_expression.get());  optimization_result.has_value())
+							expression->left = optimization_result.value();
+					}
+
+					if constexpr (std::integral_constant<bool, (std::is_same_v<right_expression_t, std::shared_ptr<ast_types>> || ...)>{ }) {
+						right_expression->accept(this);
+
+						if (auto optimization_result = optimize(right_expression.get()); optimization_result.has_value())
+							expression->right = optimization_result.value();
+					}
+				}, left, right);
+
+				return true;
+			}
 	};
 
 	void constant_folding::optimize() {
