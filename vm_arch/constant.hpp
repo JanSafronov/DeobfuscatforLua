@@ -27,5 +27,30 @@ namespace deobf::vm_arch {
 			string,
 			boolean,
 		};
+
+		// todo possibly use an union for all value types instead of variance?
+		std::variant<std::nullptr_t, double, std::string, bool> value;
+
+		template <typename kst_type,
+			typename = std::enable_if<is_contained<typename std::decay<kst_type>::type, std::nullptr_t, double, std::string, bool>::value>>
+
+		explicit constant(kst_type&& value) :
+			value(value)
+		{ }
+
+
+		// todo operator==
+
+		[[nodiscard]] inline auto get_constant_type() const noexcept {
+			return static_cast<enum constant_type>(value.index());
+		}
+
+		bool operator==(const constant& other) const {
+			return other.value == value;
+		}
+
+		std::string to_string() const;
+
+		virtual ~constant() = default;
 	};
 }
