@@ -216,4 +216,32 @@ namespace deobf::ast {
 		
 		return function_node;
 	}
+
+	antlrcpp::Any cst_visitor::visitFunctiondef(LuaParser::FunctiondefContext* ctx) {
+		// local x = function() end
+		auto function_node = visitFuncbody(ctx->funcbody()).as<std::shared_ptr<ir::expression::function>>();
+		//function_node->type = expression::function::function_type::anonymous_t;
+
+		return std::static_pointer_cast<expression_t>(function_node);
+	}
+
+	antlrcpp::Any cst_visitor::visitVarlist(LuaParser::VarlistContext* ctx) {
+		expression::variable_list_t variable_list;
+
+		for (auto variable : ctx->var()) {
+			auto variable_node = visitVar(variable).as<std::shared_ptr<expression_t>>();
+			variable_list.push_back(std::move(variable_node));
+		}
+
+		return variable_list;
+	}
+
+	antlrcpp::Any cst_visitor::visitVarSuffix(LuaParser::VarSuffixContext* ctx) {
+		std::shared_ptr<expression_t> expression_name = nullptr;
+		if (auto prefix_expression = ctx->exp())
+			expression_name = visitExp(prefix_expression).as<std::shared_ptr<expression_t>>();
+		else {
+			auto string_literal = std::make_shared<expression::string_literal>(ctx->NAME()->getText());
+			expression_name = std::static_pointer_cast<expression_t>(string_literal);
+		}
 }
