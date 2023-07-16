@@ -48,6 +48,42 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis::optimizations::r
 
 				if (reg_c_reference.get().op != vm_arch::opcode::op_move && !is_kc)
 					goto continue_execution;
+
+
+				// might memory leak if we capture shared_ptr? capture weak_ptr instead?
+				auto is_preserved_block = [=](vm_arch::basic_block* block) -> bool {
+					if (block->instructions.size() < 3) {
+						return false;
+					}
+
+					auto& first_instruction = block->instructions.at(0).get();
+					auto& second_instruction = block->instructions.at(1).get();
+
+					const auto is_true_first = (first_instruction.op == vm_arch::opcode::op_loadbool && first_instruction.a == reg_target_a && first_instruction.b == 0);
+					const auto is_true_second = (second_instruction.op == vm_arch::opcode::op_loadbool && second_instruction.a == reg_target_c && second_instruction.b == 0);
+
+					return (is_true_first && is_true_second);
+				};
+
+				const auto& next_branch_block = current_block->target_block;
+				const auto& target_branch_block = current_block->next_block->target_block;
+
+				if (!is_preserved_block(next_branch_block.get()) && !is_preserved_block(target_branch_block.get()))
+					goto continue_execution;
+
+				last_instruction.get().a = original_reg_a;
+				last_instruction.get().c = original_reg_c;
+				last_instruction.get().op = vm_arch::aux::get_kst_optimized_logic_opcode(last_instruction.get().op, is_ka, is_kc);
+				
+				last_instruction.get().print();
+				// erase loadk/move shit
+				current_block->instructions.erase(current_block->instructions.end() - 3, current_block->instructions.end() - 1);
+
+				// erase resulting loadbools from logical op's successors
+				next_branch_block->instructions.erase(next_branch_block->instructions.begin(), next_branch_block->instructions.begin() + 2);
+				target_branch_block->instructions.erase(target_branch_block->instructions.begin(), target_branch_block->instructions.begin() + 2);
+
+				++num_optimizations;
 			}
 			// handle relational operators
 
