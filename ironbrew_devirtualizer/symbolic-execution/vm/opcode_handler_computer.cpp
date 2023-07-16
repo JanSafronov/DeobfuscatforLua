@@ -55,6 +55,35 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::vm {
 
 		if (back_track.empty()) {
 			return false;
+		}
+
+		// we have entered the final block, map it
+
+		if (auto memoized_result = memoized_virtuals.find(back_track.front().get().virtual_opcode); memoized_result != memoized_virtuals.cend()) {
+			std::cout << "got top:" << static_cast<int>(memoized_result->first) << std::endl;
+			for (auto& opcode : memoized_result->second) {
+				if (back_track.empty())
+					break;
+
+				auto front_instruction = back_track.front();
+				front_instruction.get().op = opcode;
+
+				std::invoke(callback_functor, front_instruction, nullptr);
+				back_track.pop_front();
+			}
+		}
+		else {
+			//std::cout << body->body.at(0)->to_string() << std::endl;
+			// call super op handler
+			std::cout << "front instr:" << back_track.front().get().virtual_opcode << std::endl;
+			handle(back_track.front(), body);
+		}
+		std::cout << "done." << std::endl;
+
+		//run_cycle();
+		//std::async(std::launch::deferred, &opcode_handler_computer::run_cycle, this);
+
+		return false;
 	}
 
 }
