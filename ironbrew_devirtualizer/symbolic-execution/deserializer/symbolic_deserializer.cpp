@@ -46,4 +46,26 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
 				object.deserializer_ctx->constant_order_mapping.emplace(static_cast<std::uint8_t>(numeral_right->value), result);
 			}
 		}
+
+		inline void populate_constant_order(const ir::statement::if_statement* statement) {
+			const auto stat_condition = statement->condition.get()->as<ir::expression::binary_expression>();
+			if (stat_condition) {
+				populate_constant_order({ stat_condition.get(), statement->body.get() });
+			}
+
+			for (auto& stat : statement->else_if_statements) {
+				const auto stat_condition = stat.first->as<ir::expression::binary_expression>();
+				if (stat_condition) {
+					populate_constant_order({ stat_condition.get(), stat.second.get() });
+				}
+			}
+		}
+
+		bool accept(ir::statement::variable_assign* statement) override {
+			if (statement->to_string() == "deserialize_return[3] = get_8_bits()") {
+				object.deserializer_ctx->chunk_order.push_back(process_order::parameters);
+			}
+
+			return false;
+		}
 }
