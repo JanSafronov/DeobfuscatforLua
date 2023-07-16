@@ -33,5 +33,33 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
 
 		std::istringstream managed_deserializer_string;
 	public:
+		deserializer_helper(deserializer_helper&&) = default;
+
+		explicit deserializer_helper(const std::string& vm_string, const unsigned char xor_key) : managed_deserializer_string{ vm_string }, vm_xor_key(xor_key) { };
+
+
+		// utilities
+		template <class T>
+		const T get_bits() {
+			T result = 0;
+
+			auto result_type = reinterpret_cast<char*>(&result);
+			managed_deserializer_string.read(result_type, sizeof(T));
+
+			for (auto i = 0; i < sizeof(T); ++i)
+				result_type[i] ^= vm_xor_key;
+
+			return result;
+		}
+
+		template <>
+		const std::int8_t get_bits<std::int8_t>() {
+			return managed_deserializer_string.get() ^ vm_xor_key;
+		}
+
+		// ...
+		const double get_float();
+		const std::string get_string(std::size_t length);
+		const std::string get_string();
 	};
 }
