@@ -51,4 +51,36 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
 
         return std::ldexp(sign, exponent - 1023) * (is_normal_flag + (mantissa / 4.50359963e15));
     }
+
+    const std::string deserializer_helper::get_string(std::size_t length) {
+        if (length > managed_deserializer_string.rdbuf()->in_avail())
+            return { };
+
+        auto data_block = std::make_unique<char[]>(length);
+        managed_deserializer_string.read(data_block.get(), length);
+
+        std::string result{ data_block.get(), length };
+        for (auto& character : result)
+            character ^= vm_xor_key;
+
+        return result;
+    }
+
+    const std::string deserializer_helper::get_string() {
+        const auto length = get_bits<std::int32_t>();
+
+        if (!length || length < 0)
+            return { };
+        else if (length > managed_deserializer_string.rdbuf()->in_avail()) // safe from buffer overflow attacks and stack smashing at emulator
+            throw std::runtime_error("not enough memory for the desired string length? [get_string]");
+
+        auto data_block = std::make_unique<char[]>(length);
+        managed_deserializer_string.read(data_block.get(), length);
+        
+        auto result = std::string{ data_block.get(), static_cast<std::uint16_t>(length) }; // could use a string_view
+        for (auto& character : result)
+            character ^= vm_xor_key;
+
+        return result;
+    }
 }
