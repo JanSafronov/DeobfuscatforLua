@@ -340,6 +340,87 @@ namespace deobf::ironbrew_devirtualizer::vanilla_lifter {
 				new_instruction->c += 0xff;
 				break;
 			}
+
+			case vm_arch::opcode::op_ge: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+				break;
+			}
+			case vm_arch::opcode::op_ge1: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+
+				new_instruction->b += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_ge2: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+
+				new_instruction->c += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_ge3: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 1;
+
+				new_instruction->b += 0xff;
+				new_instruction->c += 0xff;
+				break;
+			}
+
+
+			case vm_arch::opcode::op_le: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+				break;
+			}
+			case vm_arch::opcode::op_le1: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+
+				new_instruction->b += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_le2: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+
+				new_instruction->c += 0xff;
+				break;
+			}
+			case vm_arch::opcode::op_le3: { // A B C
+				new_instruction->type = vm_arch::vanilla_instruction_type::abc;
+
+				new_instruction->sbx = 0;
+				new_instruction->b = original_instruction->a;
+				new_instruction->a = 0;
+
+				new_instruction->b += 0xff;
+				new_instruction->c += 0xff;
+				break;
+			}
 		}
 
 		return std::move(new_instruction);
