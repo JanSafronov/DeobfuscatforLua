@@ -104,6 +104,30 @@ namespace deobf::ironbrew_devirtualizer::static_chunk_analysis::optimizations::r
 
 				const auto random_slot1 = junk_reg_1.get().a;
 				const auto random_slot2 = junk_reg_1.get().b;
+
+				auto is_preserved_block = [=](vm_arch::basic_block* block) -> bool {
+					if (block->instructions.size() < 3) {
+						return false;
+					}
+
+					auto& first_instruction = block->instructions.at(0).get();
+					auto& second_instruction = block->instructions.at(1).get();
+
+					first_instruction.print();
+					second_instruction.print();
+
+					// todo check first.b ?
+					const auto is_true_first = (first_instruction.op == vm_arch::opcode::op_move && first_instruction.a == random_slot2);
+					const auto is_true_second = (second_instruction.op == vm_arch::opcode::op_loadbool && second_instruction.a == random_slot1 && second_instruction.b == 0);
+
+					return (is_true_first && is_true_second);
+				};
+
+				const auto& next_branch_block = current_block->target_block;
+				const auto& target_branch_block = current_block->next_block->target_block;
+
+				if (!is_preserved_block(next_branch_block.get()) && !is_preserved_block(target_branch_block.get()))
+					goto continue_execution;
 			}
 
 		}
