@@ -313,4 +313,46 @@ namespace deobf::ast::ir::expression {
 				argument->accept(visitor);
 		}
 	}
+
+	// function
+
+	std::string function::to_string() const {
+		std::ostringstream stream;
+
+		stream << (type == function_type::local_t ? "local function" : "function");
+
+		if (function_name.has_value())
+			stream << " " << function_name.value();
+
+		stream << "(";
+
+		if (!parameters.empty()) {
+			if (parameters.size() > 1)
+				std::transform(parameters.cbegin(), parameters.cend() - 1, std::ostream_iterator<std::string>(stream, ","), [&stream](const auto& value) {
+					return value->to_string();
+				});
+
+			stream << parameters.back()->to_string();
+		}
+
+		stream << ")";
+
+		return stream.str();
+	}
+
+	bool function::equals(const node* other_node) const {
+		return false;
+	}
+
+	std::vector<std::shared_ptr<node>> function::get_children() const {
+		return { body };
+	}
+
+	void function::accept(abstract_visitor_pattern* visitor) {
+		if (visitor->accept(this)) {
+			body->accept(visitor);
+			for (auto& parameter : parameters)
+				parameter->accept(visitor);
+		}
+	}
 }
