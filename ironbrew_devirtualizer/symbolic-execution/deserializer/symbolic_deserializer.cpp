@@ -91,7 +91,19 @@ namespace deobf::ironbrew_devirtualizer::symbolic_execution::deserializer {
 					if (assign.has_value()) {
 						const auto& assign_statement = assign->get();
 						if (assign_statement.expressions.size() == 1) {
+							const auto result_string = assign_statement.expressions.at(0)->to_string();
+							if (result_string == "bytecode_deserializer()") { // protos step?
+								object.deserializer_ctx->chunk_order.push_back(deserializer::process_order::protos);
+							}
+							else if (result_string == "get_32_bits()") {
+								object.deserializer_ctx->chunk_order.push_back(deserializer::process_order::lineinfo);
+							}
 						}
+					}
+				}
+				else {
+					auto if_statement = statement->body->find_first_of<ir::statement::if_statement>();
+					if (if_statement.has_value()) {
 					}
 				}
 			}
